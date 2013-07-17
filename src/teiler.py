@@ -80,6 +80,7 @@ class TeilerWindow(QWidget):
 
     def sendFileToPeers(self, fileName):
         log.msg("OMG Dropped {0}".format(fileName))
+        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
     def run(self):
         self.show()
@@ -98,8 +99,8 @@ def main():
     multiCastPort = 8006
     teiler = TeilerState()
     teiler.multiCastPort = multiCastPort
-    reactor.listenMulticast(multiCastPort, 
-                            PeerDiscovery(teiler), 
+    reactor.listenMulticast(multiCastPort,
+                            PeerDiscovery(teiler),
                             listenMultiple=True)
     log.msg("Initiating Peer Discovery")
     

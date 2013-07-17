@@ -1,6 +1,6 @@
 # from PySide import QtCore
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 # Class to represent a peer on the network and the gui
 class TeilerPeer(QListWidgetItem):
@@ -18,7 +18,8 @@ class TeilerPeerList(QListWidget):
         # self.setDragEnabled(True)
         self.setAcceptDrops(True)
         # self.teiler.peerList.setDragEnabled(True)
-        
+    
+    #what's this?
     def contains(self, peerName):
         for i in range(self.count()):
             item = self.item(i)

@@ -2,8 +2,8 @@ import argparse
 import os
 import sys
 import utils
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
  
 import qt4reactor
 
@@ -98,7 +98,9 @@ def main():
     multiCastPort = 8006
     teiler = TeilerState()
     teiler.multiCastPort = multiCastPort
-    reactor.listenMulticast(multiCastPort, PeerDiscovery(teiler), listenMultiple=True)
+    reactor.listenMulticast(multiCastPort, 
+                            PeerDiscovery(teiler), 
+                            listenMultiple=True)
     log.msg("Initiating Peer Discovery")
     
     # Initialize file transfer service

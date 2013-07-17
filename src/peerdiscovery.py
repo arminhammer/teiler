@@ -8,14 +8,23 @@ connectMsg = "CONNECT"
 heartbeatMsg = "HEARTBEAT"
 exitMsg = "EXIT"
 
-''' Class for message object '''
-class Message():
+class Message(object):
+    """mesage to be sent across the wire"""
     def __init__(self, message, name, address, tcpPort, sessionID):
         self.message = str(message)
         self.name = str(name)
         self.address = str(address)
         self.tcpPort = str(tcpPort)
         self.sessionID = str(sessionID)
+
+    def serialize(self):
+        return json.dumps({
+                "message": self.message,
+                "name": self.name,
+                "address" : self.address,
+                "tcpPort" : self.tcpPort,
+                "sesionID" : self.sessionID
+                })
 
 class PeerDiscovery(DatagramProtocol):
     """
@@ -27,19 +36,40 @@ class PeerDiscovery(DatagramProtocol):
     def startProtocol(self):
         self.transport.setTTL(5)
         self.transport.joinGroup(self.teiler.multiCastAddress)
-        message = json.dumps(Message(connectMsg, self.teiler.name, self.teiler.address, self.teiler.tcpPort, self.teiler.sessionID).__dict__) 
-        self.transport.write(message, (self.teiler.multiCastAddress, self.teiler.multiCastPort))
-        log.msg("Sent {0} message: {1}".format(connectMsg, message))
+        message = Message(connectMsg,
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
+                          ).serialize()
+        
+        self.transport.write(message, (self.teiler.multiCastAddress, 
+                                       self.teiler.multiCastPort))
+        log.msg("Sent {0} message: {1}".format(connectMsg, message))      
         reactor.callLater(5.0, self.sendHeartBeat)
 
     def sendHeartBeat(self):
-        message = json.dumps(Message(heartbeatMsg, self.teiler.name, self.teiler.address, self.teiler.tcpPort, self.teiler.sessionID).__dict__) 
-        self.transport.write(message, (self.teiler.multiCastAddress, self.teiler.multiCastPort))
+        message = Message(heartbeatMsg, 
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
+                          ).serialize()
+
+        self.transport.write(message, 
+                             (self.teiler.multiCastAddress, 
+                              self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(heartbeatMsg, message))
         reactor.callLater(5.0, self.sendHeartBeat)
 
     def stopProtocol(self):
-        message = json.dumps(Message(exitMsg, self.teiler.name, self.teiler.address, self.teiler.tcpPort, self.teiler.sessionID).__dict__) 
+        message = Message(exitMsg, 
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
+                          ).serialize()
+
         self.transport.write(message, (self.teiler.multiCastAddress, self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(exitMsg, message))
 

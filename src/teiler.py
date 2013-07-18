@@ -77,14 +77,40 @@ class TeilerWindow(QWidget):
         layout.addWidget(menubar)
         layout.addWidget(self.teiler.peerList)
         layout.addWidget(statusBar)
-
+        
     def sendFileToPeers(self, fileName):
         log.msg("OMG Dropped {0}".format(fileName))
         filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
+    def displayAcceptFileDialog(self, fileName):
+        log.msg("Showing filename")
+        dialog = AcceptFileDialog(fileName)
+        dialog.exec_()
+    
+    def slotFile(self):
+        filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
+        
     def run(self):
         self.show()
         qt_app.exec_()
+
+class AcceptFileDialog(QDialog):
+    def __init__(self, fileName, parent=None):
+        super(AcceptFileDialog, self).__init__(parent)
+        widthLabel = QLabel("&Width:")
+        self.widthSpinBox = QSpinBox()
+        widthLabel.setBuddy(self.widthSpinBox)
+        self.widthSpinBox.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.widthSpinBox.setRange(0, 24)
+        self.beveledCheckBox = QCheckBox("&Beveled edges")
+        styleLabel = QLabel("&Style:")
+        self.styleComboBox = QComboBox()
+        styleLabel.setBuddy(self.styleComboBox)
+        self.styleComboBox.addItems(["Solid", "Dashed", "Dotted",
+        "DashDotted", "DashDotDotted"])
+        okButton = QPushButton("&OK")
+        cancelButton = QPushButton("Cancel")    
+    
 
 def quitApp():
     reactor.stop()

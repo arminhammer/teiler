@@ -32,13 +32,15 @@ class FileReceiverProtocol(LineReceiver):
         self.original_fname = self.instruction.get('original_file_path',
                                                    'not given by client')
         
+        fileName = utils.getFilenameFromPath(self.original_fname)
+        # self.teilerWindow.displayAcceptFileDialog(fileName)
         # Create the upload directory if not already present
         uploaddir = self.teiler.downloadPath
         print " * Using upload dir:", uploaddir
         if not os.path.isdir(uploaddir):
             os.makedirs(uploaddir)
 
-        self.outfilename = os.path.join(uploaddir, utils.getFilenameFromPath(self.original_fname))
+        self.outfilename = os.path.join(uploaddir, fileName)
 
         print ' * Receiving into file@', self.outfilename
         try:

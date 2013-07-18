@@ -104,8 +104,9 @@ def main():
                             listenMultiple=True)
     log.msg("Initiating Peer Discovery")
     
+    app = TeilerWindow(teiler)
     # Initialize file transfer service
-    fileReceiver = FileReceiverFactory(teiler)
+    fileReceiver = FileReceiverFactory(teiler, app)
     reactor.listenTCP(teiler.tcpPort, fileReceiver)
     log.msg("Starting file listener on ", teiler.tcpPort)
     
@@ -114,7 +115,7 @@ def main():
     
     # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,address=teiler.address)
     # Create an instance of the application window and run it
-    app = TeilerWindow(teiler)
+    
     app.run()
 
 if __name__ == '__main__':

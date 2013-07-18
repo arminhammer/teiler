@@ -1,11 +1,11 @@
 from binascii import crc32
-#from optparse import OptionParser
+# from optparse import OptionParser
 import os, json
-#, pprint, datetime
+# , pprint, datetime
 
 from twisted.protocols import basic
-#from twisted.internet import protocol
-#from twisted.application import service, internet
+# from twisted.internet import protocol
+# from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import FileSender, LineReceiver
@@ -16,11 +16,12 @@ import utils
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
 
-    def __init__(self, teiler):
+    def __init__(self, teiler, teilerWindow):
         self.outfile = None
         self.remain = 0
         self.crc = 0
         self.teiler = teiler
+        self.teilerWindow = teilerWindow
         
     def lineReceived(self, line):
         """ """
@@ -33,28 +34,28 @@ class FileReceiverProtocol(LineReceiver):
         
         # Create the upload directory if not already present
         uploaddir = self.teiler.downloadPath
-        print " * Using upload dir:",uploaddir
+        print " * Using upload dir:", uploaddir
         if not os.path.isdir(uploaddir):
             os.makedirs(uploaddir)
 
         self.outfilename = os.path.join(uploaddir, utils.getFilenameFromPath(self.original_fname))
 
-        print ' * Receiving into file@',self.outfilename
+        print ' * Receiving into file@', self.outfilename
         try:
-            self.outfile = open(self.outfilename,'wb')
+            self.outfile = open(self.outfilename, 'wb')
         except Exception, value:
             print ' ! Unable to open file', self.outfilename, value
             self.transport.loseConnection()
             return
 
         self.remain = int(self.size)
-        print ' & Entering raw mode.',self.outfile, self.remain
+        print ' & Entering raw mode.', self.outfile, self.remain
         self.setRawMode()
 
     def rawDataReceived(self, data):
         """ """
-        if self.remain%10000==0:
-            print '   & ',self.remain,'/',self.size
+        if self.remain % 10000 == 0:
+            print '   & ', self.remain, '/', self.size
         self.remain -= len(data)
 
         self.crc = crc32(data, self.crc)
@@ -64,7 +65,7 @@ class FileReceiverProtocol(LineReceiver):
         """ """
         basic.LineReceiver.connectionMade(self)
         print '\n + a connection was made'
-        print ' * ',self.transport.getPeer()
+        print ' * ', self.transport.getPeer()
 
     def connectionLost(self, reason):
         """ """
@@ -76,9 +77,9 @@ class FileReceiverProtocol(LineReceiver):
         if self.remain != 0:
             print str(self.remain) + ')!=0'
             remove_base = '--> removing tmpfile@'
-            if self.remain<0:
+            if self.remain < 0:
                 reason = ' .. file moved too much'
-            if self.remain>0:
+            if self.remain > 0:
                 reason = ' .. file moved too little'
             print remove_base + self.outfilename + reason
             os.remove(self.outfilename)
@@ -90,20 +91,21 @@ class FileReceiverProtocol(LineReceiver):
 
 def fileinfo(fname):
     """ when "file" tool is available, return it's output on "fname" """
-    return ( os.system('file 2> /dev/null')!=0 and \
+    return (os.system('file 2> /dev/null') != 0 and \
              os.path.exists(fname) and \
-             os.popen('file "'+fname+'"').read().strip().split(':')[1] )
+             os.popen('file "' + fname + '"').read().strip().split(':')[1])
 
 class FileReceiverFactory(ServerFactory):
     """ file receiver factory """
     protocol = FileReceiverProtocol
 
-    def __init__(self, teiler):
+    def __init__(self, teiler, teilerWindow):
         self.teiler = teiler
+        self.teilerWindow = teilerWindow
         
     def buildProtocol(self, addr):
         print ' + building protocol'
-        p = self.protocol(self.teiler)
+        p = self.protocol(self.teiler, self.teilerWindow)
         p.factory = self
         return p
 
@@ -154,7 +156,7 @@ class FileSenderClient(basic.LineReceiver):
         instruction = dict(file_size=self.insize,
                            original_file_path=self.path)
         instruction = json.dumps(instruction)
-        self.transport.write(instruction+'\r\n')
+        self.transport.write(instruction + '\r\n')
         sender = FileSender()
         sender.CHUNK_SIZE = 2 ** 16
         d = sender.beginFileTransfer(self.infile, self.transport,
@@ -168,7 +170,7 @@ class FileSenderClient(basic.LineReceiver):
         from twisted.internet.error import ConnectionDone
         basic.LineReceiver.connectionLost(self, reason)
         print ' - connectionLost\n  * ', reason.getErrorMessage()
-        print ' * finished with',self.path
+        print ' * finished with', self.path
         self.infile.close()
         if self.completed:
             self.controller.completed.callback(self.result)
@@ -197,7 +199,7 @@ class FileSenderClientFactory(ClientFactory):
         return p
     
 def sendFile(path, address='localhost', port=1234,):
-    controller = type('test',(object,),{'cancel':False, 'total_sent':0,'completed':Deferred()})
+    controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
     f = FileSenderClientFactory(path, controller)
     reactor.connectTCP(address, port, f)
     return controller.completed

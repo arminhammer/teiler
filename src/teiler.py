@@ -110,25 +110,6 @@ class TeilerWindow(QWidget):
         # self.displayAcceptFileDialog("Barf")
         qt_app.exec_()
 
-class AcceptFileDialog(QDialog):
-    def __init__(self, fileName, parent=None):
-        super(AcceptFileDialog, self).__init__(parent)
-        widthLabel = QLabel("&Width:")
-        self.widthSpinBox = QSpinBox()
-        widthLabel.setBuddy(self.widthSpinBox)
-        self.widthSpinBox.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.widthSpinBox.setRange(0, 24)
-        self.beveledCheckBox = QCheckBox("&Beveled edges")
-        styleLabel = QLabel("&Style:")
-        self.styleComboBox = QComboBox()
-        styleLabel.setBuddy(self.styleComboBox)
-        self.styleComboBox.addItems(["Solid", "Dashed", "Dotted",
-        "DashDotted", "DashDotDotted"])
-        okButton = QPushButton("&OK")
-        cancelButton = QPushButton("Cancel")
-        self.show()    
-    
-
 def quitApp():
     reactor.stop()
     qApp.quit()

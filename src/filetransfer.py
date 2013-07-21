@@ -1,11 +1,7 @@
 from binascii import crc32
-# from optparse import OptionParser
 import os, json
-# , pprint, datetime
 
 from twisted.protocols import basic
-# from twisted.internet import protocol
-# from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import FileSender, LineReceiver
@@ -13,6 +9,29 @@ from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 from twisted.python import log
 import utils
+
+class Message(object):
+    """mesage to be sent across the wire"""
+    def __init__(self, command):
+        # command can be either 
+        # accept, fileInfo, or EOF
+        self.command = command
+        
+    def serialize(self):
+        return json.dumps({
+                "message": self.message,
+                "name": self.name,
+                "address" : self.address,
+                "tcpPort" : self.tcpPort,
+                "sesionID" : self.sessionID
+                })
+
+class FileInfoMessage(Message):
+    ''' Subclassed message for fileInfo messages '''
+    def __init__(self, command, fileName, fileSize):
+        Message.__init__(self, command)
+        self.fileName = fileName
+        self.fileSize = fileSize
 
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
@@ -119,7 +138,7 @@ class FileReceiverFactory(ServerFactory):
         p.factory = self
         return p
 
-class FileSenderClient(basic.LineReceiver):
+class FileSenderClient(LineReceiver):
     """ file sender """
 
     def __init__(self, path, controller):

@@ -11,6 +11,7 @@ from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import FileSender, LineReceiver
 from twisted.internet.defer import Deferred
 from twisted.internet import reactor
+from twisted.python import log
 import utils
 
 class FileReceiverProtocol(LineReceiver):
@@ -33,26 +34,33 @@ class FileReceiverProtocol(LineReceiver):
                                                    'not given by client')
         
         fileName = utils.getFilenameFromPath(self.original_fname)
-        # self.teilerWindow.displayAcceptFileDialog(fileName)
-        # Create the upload directory if not already present
-        uploaddir = self.teiler.downloadPath
-        print " * Using upload dir:", uploaddir
-        if not os.path.isdir(uploaddir):
-            os.makedirs(uploaddir)
-
-        self.outfilename = os.path.join(uploaddir, fileName)
-
-        print ' * Receiving into file@', self.outfilename
-        try:
-            self.outfile = open(self.outfilename, 'wb')
-        except Exception, value:
-            print ' ! Unable to open file', self.outfilename, value
-            self.transport.loseConnection()
+        log.msg("Opening file accept dialog")
+        # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
+        ok = self.teilerWindow.questionMessage(fileName, "peer")
+        log.msg("OK is {0}".format(ok))
+        if ok == "no":
+            log.msg("Download rejected")
             return
-
-        self.remain = int(self.size)
-        print ' & Entering raw mode.', self.outfile, self.remain
-        self.setRawMode()
+        else:
+            # Create the upload directory if not already present
+            uploaddir = self.teiler.downloadPath
+            print " * Using upload dir:", uploaddir
+            if not os.path.isdir(uploaddir):
+                os.makedirs(uploaddir)
+    
+            self.outfilename = os.path.join(uploaddir, fileName)
+    
+            print ' * Receiving into file@', self.outfilename
+            try:
+                self.outfile = open(self.outfilename, 'wb')
+            except Exception, value:
+                print ' ! Unable to open file', self.outfilename, value
+                self.transport.loseConnection()
+                return
+    
+            self.remain = int(self.size)
+            print ' & Entering raw mode.', self.outfile, self.remain
+            self.setRawMode()
 
     def rawDataReceived(self, data):
         """ """

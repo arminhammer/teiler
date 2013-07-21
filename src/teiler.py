@@ -77,10 +77,25 @@ class TeilerWindow(QWidget):
         layout.addWidget(menubar)
         layout.addWidget(self.teiler.peerList)
         layout.addWidget(statusBar)
+        # self.questionMessage("Borscht", "Flarb")
         
     def sendFileToPeers(self, fileName):
         log.msg("OMG Dropped {0}".format(fileName))
         filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
+
+    def questionMessage(self, fileName, peerName):    
+        reply = QMessageBox.question(self, "Accept file download?",
+                "Do you want to accept the {0} from {1}?".format(fileName, peerName),
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+        if reply == QMessageBox.Yes:
+            return "yes"
+            # self.questionLabel.setText("Yes")
+        elif reply == QMessageBox.No:
+            return "no"
+            # self.questionLabel.setText("No")
+        else:
+            return "cancel"
+            # self.questionLabel.setText("Cancel")
 
     def displayAcceptFileDialog(self, fileName):
         log.msg("Showing filename")
@@ -92,6 +107,7 @@ class TeilerWindow(QWidget):
         
     def run(self):
         self.show()
+        # self.displayAcceptFileDialog("Barf")
         qt_app.exec_()
 
 class AcceptFileDialog(QDialog):
@@ -109,7 +125,8 @@ class AcceptFileDialog(QDialog):
         self.styleComboBox.addItems(["Solid", "Dashed", "Dotted",
         "DashDotted", "DashDotDotted"])
         okButton = QPushButton("&OK")
-        cancelButton = QPushButton("Cancel")    
+        cancelButton = QPushButton("Cancel")
+        self.show()    
     
 
 def quitApp():

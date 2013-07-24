@@ -10,28 +10,33 @@ from twisted.internet import reactor
 from twisted.python import log
 import utils
 
+acceptMsg = "ACCEPT"
+rejectMsg = "REJECT"
+fileMsg = "FILE"
+dirMsg = "DIR"
+endMsg = "EOT"
+
 class Message(object):
     """mesage to be sent across the wire"""
     def __init__(self, command):
-        # command can be either 
-        # accept, fileInfo, or EOF
         self.command = command
-        
+    
     def serialize(self):
-        return json.dumps({
-                "message": self.message,
-                "name": self.name,
-                "address" : self.address,
-                "tcpPort" : self.tcpPort,
-                "sesionID" : self.sessionID
-                })
-
+        return json.dumps(self.__dict__)
+'''
 class FileInfoMessage(Message):
-    ''' Subclassed message for fileInfo messages '''
     def __init__(self, command, fileName, fileSize):
         Message.__init__(self, command)
         self.fileName = fileName
         self.fileSize = fileSize
+
+    def serialize(self):
+        return json.dumps({
+                "command" : self.command,
+                "fileName" : self.fileName,
+                "fileSize" : self.fileSize
+        })
+'''
 
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
@@ -45,6 +50,28 @@ class FileReceiverProtocol(LineReceiver):
         
     def lineReceived(self, line):
         """ """
+        message = json.loads(line)
+        log.msg("Receiver received message {0}".format(message))
+        if message['command'] == acceptMsg:
+            # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
+            ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
+            log.msg("OK is {0}".format(ok))
+            if ok == "no":
+                log.msg("Download rejected")
+                rejectMessage = Message(rejectMsg)
+                self.transport.write(rejectMessage.serialize() + '\r\n')
+            else:
+                log.msg("The file is accepted!")
+        elif message['command'] == dirMsg:
+            pass
+        elif message['command'] == fileMsg:
+            pass
+        elif message['command'] == endMsg:
+            pass
+        else:
+            log.msg("Command not recognized.")
+        
+        '''
         print ' ~ lineReceived:\n\t', line
         self.instruction = json.loads(line)
         self.instruction.update(dict(client=self.transport.getPeer().host))
@@ -80,6 +107,7 @@ class FileReceiverProtocol(LineReceiver):
             self.remain = int(self.size)
             print ' & Entering raw mode.', self.outfile, self.remain
             self.setRawMode()
+        '''
 
     def rawDataReceived(self, data):
         """ """
@@ -182,15 +210,33 @@ class FileSenderClient(LineReceiver):
 
     def connectionMade(self):
         """ """
-        instruction = dict(file_size=self.insize,
-                           original_file_path=self.path)
-        instruction = json.dumps(instruction)
-        self.transport.write(instruction + '\r\n')
+        askMessage = Message(acceptMsg)
+        askMessage.fileName = str(utils.getFilenameFromPath(self.path))
+        log.msg("Sending ACCEPT")
+        self.transport.write(askMessage.serialize() + '\r\n')
+        
+        '''
         sender = FileSender()
         sender.CHUNK_SIZE = 2 ** 16
         d = sender.beginFileTransfer(self.infile, self.transport,
                                      self._monitor)
         d.addCallback(self.cbTransferCompleted)
+        '''
+        
+    def lineReceived(self, line):
+        message = json.loads(line)
+        log.msg("Sender received message {0}".format(message))
+        if message['command'] == rejectMsg:
+            log.msg("Received rejection.  Closing...")
+            self.loseConnection()
+        elif message['command'] == dirMsg:
+            pass
+        elif message['command'] == fileMsg:
+            pass
+        elif message['command'] == endMsg:
+            pass
+        else:
+            log.msg("Command not recognized.")
 
     def connectionLost(self, reason):
         """

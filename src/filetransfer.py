@@ -10,8 +10,10 @@ from twisted.internet import reactor
 from twisted.python import log
 import utils
 
+beginMsg = "BEGIN"
 acceptMsg = "ACCEPT"
 rejectMsg = "REJECT"
+receivedMsg = "RECEIVED"
 fileMsg = "FILE"
 dirMsg = "DIR"
 endMsg = "EOT"
@@ -52,7 +54,7 @@ class FileReceiverProtocol(LineReceiver):
         """ """
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
-        if message['command'] == acceptMsg:
+        if message['command'] == beginMsg:
             # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
             ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
             log.msg("OK is {0}".format(ok))
@@ -60,8 +62,10 @@ class FileReceiverProtocol(LineReceiver):
                 log.msg("Download rejected")
                 rejectMessage = Message(rejectMsg)
                 self.transport.write(rejectMessage.serialize() + '\r\n')
-            else:
+            elif ok == "yes":
                 log.msg("The file is accepted!")
+                acceptMessage = Message(acceptMsg)
+                self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == dirMsg:
             pass
         elif message['command'] == fileMsg:
@@ -172,9 +176,11 @@ class FileSenderClient(LineReceiver):
     def __init__(self, path, controller):
         """ """
         self.path = path
+        self.fileName = str(utils.getFilenameFromPath(path))
         self.controller = controller
 
-        self.infile = open(self.path, 'rb')
+        if os.path.isfile(self.path):
+            self.infile = open(self.path, 'rb')
         self.insize = os.stat(self.path).st_size
 
         self.result = None
@@ -210,10 +216,10 @@ class FileSenderClient(LineReceiver):
 
     def connectionMade(self):
         """ """
-        askMessage = Message(acceptMsg)
-        askMessage.fileName = str(utils.getFilenameFromPath(self.path))
-        log.msg("Sending ACCEPT")
-        self.transport.write(askMessage.serialize() + '\r\n')
+        beginMessage = Message(beginMsg)
+        beginMessage.fileName = self.fileName
+        log.msg("Sending BEGIN")
+        self.transport.write(beginMessage.serialize() + '\r\n')
         
         '''
         sender = FileSender()
@@ -229,15 +235,36 @@ class FileSenderClient(LineReceiver):
         if message['command'] == rejectMsg:
             log.msg("Received rejection.  Closing...")
             self.loseConnection()
-        elif message['command'] == dirMsg:
-            pass
-        elif message['command'] == fileMsg:
-            pass
-        elif message['command'] == endMsg:
+        elif message['command'] == acceptMsg:
+            self.transferFiles()
+        elif message['command'] == receivedMsg:
             pass
         else:
             log.msg("Command not recognized.")
 
+    def transferFiles(self):
+        log.msg("Begin transfer")
+        if os.path.isdir(self.path):
+            for root, dirs, files in os.walk(self.path, topdown=True):
+                for name in files:
+                    relfilePath = os.path.join(os.path.relpath(root, self.path), name)
+                    fileMessage = Message(fileMsg)
+                    fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
+                    fileMessage.fileSize = os.path.getsize(relFilePath)
+                    self.transport.write(fileMessage)
+                for name in dirs:
+                    relDirPath = os.path.join(os.path.relpath(root, self.path), name) 
+                    dirMessage = Message(dirMessage)
+                    dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
+                    self.transport.write(dirMessage)
+        else:
+            log.msg("Just sending a file")
+            relfilePath = os.path.join(os.path.relpath(root, self.path), name)
+            fileMessage = Message(fileMsg)
+            fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
+            fileMessage.fileSize = os.path.getsize(relFilePath)
+            self.transport.write(fileMessage)
+        
     def connectionLost(self, reason):
         """
             NOTE: reason is a twisted.python.failure.Failure instance

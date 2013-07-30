@@ -1,6 +1,6 @@
 from binascii import crc32
 import os, json
-
+import Queue
 from twisted.protocols import basic
 from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ClientFactory
@@ -221,14 +221,6 @@ class FileSenderClient(LineReceiver):
         log.msg("Sending BEGIN")
         self.transport.write(beginMessage.serialize() + '\r\n')
         
-        '''
-        sender = FileSender()
-        sender.CHUNK_SIZE = 2 ** 16
-        d = sender.beginFileTransfer(self.infile, self.transport,
-                                     self._monitor)
-        d.addCallback(self.cbTransferCompleted)
-        '''
-        
     def lineReceived(self, line):
         message = json.loads(line)
         log.msg("Sender received message {0}".format(message))
@@ -236,27 +228,23 @@ class FileSenderClient(LineReceiver):
             log.msg("Received rejection.  Closing...")
             self.loseConnection()
         elif message['command'] == acceptMsg:
-            self.transferFiles()
+            self.initTransfer()
         elif message['command'] == receivedMsg:
             pass
         else:
             log.msg("Command not recognized.")
 
-    def transferFiles(self):
+    def initTransfer(self):
         log.msg("Begin transfer")
         if os.path.isdir(self.path):
             for root, dirs, files in os.walk(self.path, topdown=True):
-                for name in files:
-                    relfilePath = os.path.join(os.path.relpath(root, self.path), name)
-                    fileMessage = Message(fileMsg)
-                    fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
-                    fileMessage.fileSize = os.path.getsize(relFilePath)
-                    self.transport.write(fileMessage)
                 for name in dirs:
-                    relDirPath = os.path.join(os.path.relpath(root, self.path), name) 
-                    dirMessage = Message(dirMessage)
-                    dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
-                    self.transport.write(dirMessage)
+                    self.transferQueue.put(os.path.join(root, name))
+                for name in files:
+                    self.transferQueue.put(os.path.join(root, name))
+            log.msg("Printing queue")
+            while not self.transferQueue.empty():
+                log.msg(self.transferQueue.get())
         else:
             log.msg("Just sending a file")
             relfilePath = os.path.join(os.path.relpath(root, self.path), name)
@@ -264,7 +252,27 @@ class FileSenderClient(LineReceiver):
             fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
             fileMessage.fileSize = os.path.getsize(relFilePath)
             self.transport.write(fileMessage)
-        
+            
+    def processTransferQueue(self):
+        path = self.transferQueue.get()
+        if os.path.isdir():
+            relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
+            dirMessage = Message(dirMessage)
+            dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
+            self.transport.write(dirMessage)
+        else:
+            relfilePath = os.path.join(os.path.relpath(root, self.path), path)
+            fileMessage = Message(fileMsg)
+            fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
+            fileMessage.fileSize = os.path.getsize(relFilePath)
+            self.transport.write(fileMessage)
+        sender = FileSender()
+        sender.CHUNK_SIZE = 4096
+        d = defer.Deferred()
+        d = sender.beginFileTransfer(open(path, 'rb'), self.transport,
+                                     self._monitor)
+        d.addCallback(self.cbTransferCompleted)
+    
     def connectionLost(self, reason):
         """
             NOTE: reason is a twisted.python.failure.Failure instance

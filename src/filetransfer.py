@@ -52,6 +52,7 @@ class FileReceiverProtocol(LineReceiver):
         
     def lineReceived(self, line):
         """ """
+        d = defer.Deferred()
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
         if message['command'] == beginMsg:
@@ -67,13 +68,23 @@ class FileReceiverProtocol(LineReceiver):
                 acceptMessage = Message(acceptMsg)
                 self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == dirMsg:
-            pass
+            dirName = message['dirName']
+            d.addCallBack(self.createDirectory(dirName))
+            d.addCallBack(self.sendReceivedMessage())
         elif message['command'] == fileMsg:
-            pass
+            fileNath = message['fileName']
+            fileSize = message['fileSize']
+            self.setRawMode()
         elif message['command'] == endMsg:
             pass
         else:
             log.msg("Command not recognized.")
+        
+        def createDirectory(dirName):
+            pass
+        
+        def sendReceivedMessage():
+            pass
         
         '''
         print ' ~ lineReceived:\n\t', line

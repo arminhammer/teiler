@@ -178,6 +178,7 @@ class FileSenderClient(LineReceiver):
         self.path = path
         self.fileName = str(utils.getFilenameFromPath(path))
         self.controller = controller
+        self.transferQueue = Queue.Queue()
 
         if os.path.isfile(self.path):
             self.infile = open(self.path, 'rb')
@@ -242,9 +243,9 @@ class FileSenderClient(LineReceiver):
                     self.transferQueue.put(os.path.join(root, name))
                 for name in files:
                     self.transferQueue.put(os.path.join(root, name))
-            log.msg("Printing queue")
-            while not self.transferQueue.empty():
-                log.msg(self.transferQueue.get())
+            # log.msg("Printing queue")
+            # while not self.transferQueue.empty():
+            #    log.msg(self.transferQueue.get())
         else:
             log.msg("Just sending a file")
             relfilePath = os.path.join(os.path.relpath(root, self.path), name)
@@ -254,6 +255,7 @@ class FileSenderClient(LineReceiver):
             self.transport.write(fileMessage)
             
     def processTransferQueue(self):
+        d = defer.Deferred()
         path = self.transferQueue.get()
         if os.path.isdir():
             relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
@@ -268,10 +270,10 @@ class FileSenderClient(LineReceiver):
             self.transport.write(fileMessage)
         sender = FileSender()
         sender.CHUNK_SIZE = 4096
-        d = defer.Deferred()
         d = sender.beginFileTransfer(open(path, 'rb'), self.transport,
                                      self._monitor)
         d.addCallback(self.cbTransferCompleted)
+        d.addCallback(self.processTransferQueue())
     
     def connectionLost(self, reason):
         """

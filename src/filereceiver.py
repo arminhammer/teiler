@@ -1,3 +1,12 @@
+import os, json
+from twisted.protocols import basic
+from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import ServerFactory
+import filetransfer
+from filetransfer import Message
+from twisted.internet.defer import Deferred
+from twisted.python import log
+
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
 
@@ -10,30 +19,30 @@ class FileReceiverProtocol(LineReceiver):
         
     def lineReceived(self, line):
         """ """
-        d = defer.Deferred()
+        d = Deferred()
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
-        if message['command'] == beginMsg:
+        if message['command'] == filetransfer.beginMsg:
             # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
             ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
             log.msg("OK is {0}".format(ok))
             if ok == "no":
                 log.msg("Download rejected")
-                rejectMessage = Message(rejectMsg)
+                rejectMessage = Message(filetransfer.rejectMsg)
                 self.transport.write(rejectMessage.serialize() + '\r\n')
             elif ok == "yes":
                 log.msg("The file is accepted!")
-                acceptMessage = Message(acceptMsg)
+                acceptMessage = Message(filetransfer.acceptMsg)
                 self.transport.write(acceptMessage.serialize() + '\r\n')
-        elif message['command'] == dirMsg:
+        elif message['command'] == filetransfer.dirMsg:
             dirName = message['dirName']
             d.addCallBack(self.createDirectory(dirName))
             d.addCallBack(self.sendReceivedMessage())
-        elif message['command'] == fileMsg:
+        elif message['command'] == filetransfer.fileMsg:
             fileNath = message['fileName']
             fileSize = message['fileSize']
             self.setRawMode()
-        elif message['command'] == endMsg:
+        elif message['command'] == filetransfer.endMsg:
             pass
         else:
             log.msg("Command not recognized.")

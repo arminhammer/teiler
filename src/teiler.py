@@ -13,7 +13,7 @@ qt4reactor.install()
 from twisted.python import log
 from twisted.internet import reactor
 import filetransfer
-from filetransfer import FileReceiverFactory
+from filereceiver import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import TeilerPeer, TeilerPeerList
         

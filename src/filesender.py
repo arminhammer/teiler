@@ -1,3 +1,12 @@
+import Queue
+import utils
+import os, json
+from twisted.protocols import basic
+from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import ClientFactory
+import filetransfer
+from twisted.python import log
+
 class FileSenderClient(LineReceiver):
     """ file sender """
 
@@ -45,7 +54,7 @@ class FileSenderClient(LineReceiver):
 
     def connectionMade(self):
         """ """
-        beginMessage = Message(beginMsg)
+        beginMessage = filetransfer.Message(filetransfer.beginMsg)
         beginMessage.fileName = self.fileName
         log.msg("Sending BEGIN")
         self.transport.write(beginMessage.serialize() + '\r\n')
@@ -53,12 +62,12 @@ class FileSenderClient(LineReceiver):
     def lineReceived(self, line):
         message = json.loads(line)
         log.msg("Sender received message {0}".format(message))
-        if message['command'] == rejectMsg:
+        if message['command'] == filetransfer.rejectMsg:
             log.msg("Received rejection.  Closing...")
             self.loseConnection()
-        elif message['command'] == acceptMsg:
+        elif message['command'] == filetransfer.acceptMsg:
             self.initTransfer()
-        elif message['command'] == receivedMsg:
+        elif message['command'] == filetransfer.receivedMsg:
             pass
         else:
             log.msg("Command not recognized.")
@@ -77,7 +86,7 @@ class FileSenderClient(LineReceiver):
         else:
             log.msg("Just sending a file")
             relfilePath = os.path.join(os.path.relpath(root, self.path), name)
-            fileMessage = Message(fileMsg)
+            fileMessage = Message(filetransfer.fileMsg)
             fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
             fileMessage.fileSize = os.path.getsize(relFilePath)
             self.transport.write(fileMessage)
@@ -87,12 +96,12 @@ class FileSenderClient(LineReceiver):
         path = self.transferQueue.get()
         if os.path.isdir():
             relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
-            dirMessage = Message(dirMessage)
+            dirMessage = filetransfer.Message(dirMessage)
             dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
             self.transport.write(dirMessage)
         else:
             relfilePath = os.path.join(os.path.relpath(root, self.path), path)
-            fileMessage = Message(fileMsg)
+            fileMessage = filetransfer.Message(filetransfer.fileMsg)
             fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
             fileMessage.fileSize = os.path.getsize(relFilePath)
             self.transport.write(fileMessage)

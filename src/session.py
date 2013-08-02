@@ -10,6 +10,7 @@ from twisted.internet import reactor
 from twisted.python import log
 from filesender import FileSenderClientFactory
 import utils
+from sessionprotocol import SessionFactory
 
 beginMsg = "BEGIN"
 acceptMsg = "ACCEPT"
@@ -26,20 +27,6 @@ class Message(object):
     
     def serialize(self):
         return json.dumps(self.__dict__)
-'''
-class FileInfoMessage(Message):
-    def __init__(self, command, fileName, fileSize):
-        Message.__init__(self, command)
-        self.fileName = fileName
-        self.fileSize = fileSize
-
-    def serialize(self):
-        return json.dumps({
-                "command" : self.command,
-                "fileName" : self.fileName,
-                "fileSize" : self.fileSize
-        })
-'''
 
 def __init__(self, address, port, path):
     self.id = utils.generateSessionID()
@@ -47,8 +34,32 @@ def __init__(self, address, port, path):
     self.address = address
     self.port = port
     self.path = path
-    self.status = initial
+    self.status = "initial"
     
+def processResponse(self, message):
+    pass
+
+def sendBeginning(self):
+    beginMessage = Message(beginMsg)
+    beginMessage.fileName = self.fileName
+    log.msg("Sending BEGIN")
+    f = SessionFactory(beginMessage)
+    self.status = "begun"
+    reactor.connectTCP(self.address, self.port, f)
+    
+def sendEnd(self):
+    endMessage = Message(endMsg)
+    log.msg("Sending EOT")
+    f = SessionFactory(endMessage)
+    self.status = "finished"
+    reactor.connectTCP(self.address, self.port, f)
+
+def sendFile(path, address='localhost', port=1234,):
+    controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
+    f = FileSenderClientFactory(path, controller)
+    reactor.connectTCP(address, port, f)
+    return controller.completed
+
 def initTransfer(self):
         log.msg("Begin transfer")
         if os.path.isdir(self.path):
@@ -68,7 +79,7 @@ def initTransfer(self):
             
 def processTransferQueue(self):
     log.msg("Processing queue")
-    d = Deferred()
+    #d = Deferred()
     path = self.transferQueue.get()
     log.msg("Sending {0}".format(path))
     if path == None:
@@ -87,15 +98,9 @@ def processTransferQueue(self):
             fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
             fileMessage.fileSize = os.path.getsize(relFilePath)
             self.transport.write(fileMessage)
-        sender = FileSender()
-        sender.CHUNK_SIZE = 4096
-        d = sender.beginFileTransfer(open(path, 'rb'), self.transport,
-                                     self._monitor)
-        d.addCallback(self.cbTransferCompleted)
-        d.addCallback(self.processTransferQueue())
+        #sender = FileSender()
+        #sender.CHUNK_SIZE = 4096
+        #d = sender.beginFileTransfer(open(path, 'rb'), self.transport, self._monitor)
+        #d.addCallback(self.cbTransferCompleted)
+        #d.addCallback(self.processTransferQueue())
     
-def sendFile(path, address='localhost', port=1234,):
-    controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
-    f = FileSenderClientFactory(path, controller)
-    reactor.connectTCP(address, port, f)
-    return controller.completed

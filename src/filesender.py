@@ -97,14 +97,16 @@ class FileSenderClient(LineReceiver):
             self.transport.write(fileMessage)
             
     def processTransferQueue(self):
+        log.msg("Processing queue")
         d = Deferred()
         path = self.transferQueue.get()
+        log.msg("Sending {0}".format(path))
         if path == None:
             endMessage = Message(filetransfer.endMsg)
             self.transport.write(endMessage)
             reactor.callLater(self.cbTransferCompleted())
         else:
-            if os.path.isdir():
+            if os.path.isdir(path):
                 relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
                 dirMessage = filetransfer.Message(dirMessage)
                 dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)

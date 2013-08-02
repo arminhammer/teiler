@@ -29,6 +29,7 @@ class TeilerState():
         self.multiCastPort = 8005
         self.tcpPort = 9988
         self.downloadPath = "/home/armin/Downloads"
+        self.sessions = []
 
 # Class for the GUI
 class TeilerWindow(QWidget):

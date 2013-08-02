@@ -5,7 +5,9 @@ from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ClientFactory
 import filetransfer
+from twisted.internet.defer import Deferred
 from twisted.python import log
+from twisted.internet import reactor
 
 class FileSenderClient(LineReceiver):
     """ file sender """
@@ -47,7 +49,7 @@ class FileSenderClient(LineReceiver):
 
         return data
 
-    def cbTransferCompleted(self, lastsent):
+    def cbTransferCompleted(self):
         """ """
         self.completed = True
         self.transport.loseConnection()
@@ -66,7 +68,9 @@ class FileSenderClient(LineReceiver):
             log.msg("Received rejection.  Closing...")
             self.loseConnection()
         elif message['command'] == filetransfer.acceptMsg:
-            self.initTransfer()
+            #d = Deferred()
+            reactor.callLater(self.initTransfer())
+            #d.addCallback(self.initTransfer())
         elif message['command'] == filetransfer.receivedMsg:
             pass
         else:
@@ -83,6 +87,7 @@ class FileSenderClient(LineReceiver):
             # log.msg("Printing queue")
             # while not self.transferQueue.empty():
             #    log.msg(self.transferQueue.get())
+            reactor.callLater(self.processTransferQueue())
         else:
             log.msg("Just sending a file")
             relfilePath = os.path.join(os.path.relpath(root, self.path), name)
@@ -92,25 +97,30 @@ class FileSenderClient(LineReceiver):
             self.transport.write(fileMessage)
             
     def processTransferQueue(self):
-        d = defer.Deferred()
+        d = Deferred()
         path = self.transferQueue.get()
-        if os.path.isdir():
-            relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
-            dirMessage = filetransfer.Message(dirMessage)
-            dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
-            self.transport.write(dirMessage)
+        if path == None:
+            endMessage = Message(filetransfer.endMsg)
+            self.transport.write(endMessage)
+            reactor.callLater(self.cbTransferCompleted())
         else:
-            relfilePath = os.path.join(os.path.relpath(root, self.path), path)
-            fileMessage = filetransfer.Message(filetransfer.fileMsg)
-            fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
-            fileMessage.fileSize = os.path.getsize(relFilePath)
-            self.transport.write(fileMessage)
-        sender = FileSender()
-        sender.CHUNK_SIZE = 4096
-        d = sender.beginFileTransfer(open(path, 'rb'), self.transport,
-                                     self._monitor)
-        d.addCallback(self.cbTransferCompleted)
-        d.addCallback(self.processTransferQueue())
+            if os.path.isdir():
+                relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
+                dirMessage = filetransfer.Message(dirMessage)
+                dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
+                self.transport.write(dirMessage)
+            else:
+                relfilePath = os.path.join(os.path.relpath(root, self.path), path)
+                fileMessage = filetransfer.Message(filetransfer.fileMsg)
+                fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
+                fileMessage.fileSize = os.path.getsize(relFilePath)
+                self.transport.write(fileMessage)
+            sender = FileSender()
+            sender.CHUNK_SIZE = 4096
+            d = sender.beginFileTransfer(open(path, 'rb'), self.transport,
+                                         self._monitor)
+            d.addCallback(self.cbTransferCompleted)
+            d.addCallback(self.processTransferQueue())
     
     def connectionLost(self, reason):
         """

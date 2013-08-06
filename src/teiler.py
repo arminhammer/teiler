@@ -5,7 +5,7 @@ import utils
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
  
-import qt4reactor
+from qtreactor import qt4reactor
 
 qt_app = QApplication(sys.argv)
 qt4reactor.install()
@@ -115,6 +115,12 @@ def quitApp():
     reactor.stop()
     qApp.quit()
 
+def download_path_exists():
+    downloadPath = os.path.join(os.path.expanduser("~"), "blaster")
+    if os.path.exists(downloadPath) == False:
+        os.mkdir(downloadPath)
+
+
 def main():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser(description="Exchange files!")
@@ -124,12 +130,15 @@ def main():
     multiCastPort = 8006
     teiler = TeilerState()
     teiler.multiCastPort = multiCastPort
-    reactor.listenMulticast(multiCastPort,
-                            PeerDiscovery(teiler),
+
+    reactor.listenMulticast(multiCastPort, 
+                            PeerDiscovery(teiler), 
                             listenMultiple=True)
+                            
+    app = TeilerWindow(teiler)
     log.msg("Initiating Peer Discovery")
     
-    app = TeilerWindow(teiler)
+    
     # Initialize file transfer service
     fileReceiver = FileReceiverFactory(teiler, app)
     reactor.listenTCP(teiler.tcpPort, fileReceiver)
@@ -144,4 +153,5 @@ def main():
     app.run()
 
 if __name__ == '__main__':
+    download_path_exists()
     main()

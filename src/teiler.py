@@ -20,9 +20,9 @@ from peerlist import TeilerPeer, TeilerPeerList
 # Class to maintain the state of the program
 class TeilerState():
     def __init__(self):
-        self.address = utils.getLiveInterface()
+        self.tcpAddress = utils.getLiveInterface()
         self.sessionID = utils.generateSessionID()
-        self.name = "name@%s" % self.address
+        self.name = "name@%s" % self.tcpAddress
         self.peerList = TeilerPeerList()
         self.messages = []
         self.multiCastAddress = '230.0.0.30'
@@ -82,7 +82,7 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("OMG Dropped {0}".format(fileName))
-        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
+        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.tcpAddress)
 
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",
@@ -132,7 +132,7 @@ def main():
     teiler.multiCastPort = multiCastPort
 
     reactor.listenMulticast(multiCastPort, 
-                            PeerDiscovery(teiler), 
+                            PeerDiscovery(reactor, teiler.name, teiler.multiCastAddress, teiler.multiCastPort, teiler.tcpAddress, teiler.tcpPort), 
                             listenMultiple=True)
                             
     app = TeilerWindow(teiler)
@@ -147,7 +147,7 @@ def main():
     # qt4reactor requires runReturn() in order to work
     reactor.runReturn()
     
-    # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,address=teiler.address)
+    # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,tcpAddress=teiler.tcpAddress)
     # Create an instance of the application window and run it
     
     app.run()

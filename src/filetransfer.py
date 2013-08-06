@@ -11,7 +11,6 @@ from twisted.python import log
 from filesender import FileSenderClientFactory
 import utils
 
-<<<<<<< HEAD
 beginMsg = "BEGIN"
 acceptMsg = "ACCEPT"
 rejectMsg = "REJECT"
@@ -19,10 +18,6 @@ receivedMsg = "RECEIVED"
 fileMsg = "FILE"
 dirMsg = "DIR"
 endMsg = "EOT"
-=======
-class FileReceiverProtocol(LineReceiver):
-    """protocol that will be used to transfer files/raw data."""
->>>>>>> refs/remotes/christeiler/bossman
 
 class Message(object):
     """mesage to be sent across the wire"""

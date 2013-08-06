@@ -5,7 +5,7 @@ import utils
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
  
-from qtreactor import qt4reactor
+import qt4reactor
 
 qt_app = QApplication(sys.argv)
 qt4reactor.install()
@@ -28,12 +28,8 @@ class TeilerState():
         self.multiCastAddress = '230.0.0.30'
         self.multiCastPort = 8005
         self.tcpPort = 9988
-<<<<<<< HEAD
         self.downloadPath = "/home/armin/Downloads"
         self.sessions = []
-=======
-
->>>>>>> refs/remotes/christeiler/bossman
 
 # Class for the GUI
 class TeilerWindow(QWidget):
@@ -119,12 +115,6 @@ def quitApp():
     reactor.stop()
     qApp.quit()
 
-def download_path_exists():
-    downloadPath = os.path.join(os.path.expanduser("~"), "blaster")
-    if os.path.exists(downloadPath) == False:
-        os.mkdir(downloadPath)
-
-
 def main():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser(description="Exchange files!")
@@ -134,13 +124,8 @@ def main():
     multiCastPort = 8006
     teiler = TeilerState()
     teiler.multiCastPort = multiCastPort
-<<<<<<< HEAD
     reactor.listenMulticast(multiCastPort,
                             PeerDiscovery(teiler),
-=======
-    reactor.listenMulticast(multiCastPort, 
-                            PeerDiscovery(teiler), 
->>>>>>> refs/remotes/christeiler/bossman
                             listenMultiple=True)
     log.msg("Initiating Peer Discovery")
     
@@ -159,5 +144,4 @@ def main():
     app.run()
 
 if __name__ == '__main__':
-    download_path_exists()
     main()

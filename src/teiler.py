@@ -5,7 +5,7 @@ import utils
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
  
-from qtreactor import qt4reactor
+import qt4reactor
 
 qt_app = QApplication(sys.argv)
 qt4reactor.install()
@@ -20,9 +20,9 @@ from peerlist import TeilerPeer, TeilerPeerList
 # Class to maintain the state of the program
 class TeilerState():
     def __init__(self):
-        self.tcpAddress = utils.getLiveInterface()
+        self.address = utils.getLiveInterface()
         self.sessionID = utils.generateSessionID()
-        self.name = "name@%s" % self.tcpAddress
+        self.name = "name@%s" % self.address
         self.peerList = TeilerPeerList()
         self.messages = []
         self.multiCastAddress = '230.0.0.30'
@@ -82,7 +82,7 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("OMG Dropped {0}".format(fileName))
-        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.tcpAddress)
+        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",
@@ -115,12 +115,6 @@ def quitApp():
     reactor.stop()
     qApp.quit()
 
-def download_path_exists():
-    downloadPath = os.path.join(os.path.expanduser("~"), "blaster")
-    if os.path.exists(downloadPath) == False:
-        os.mkdir(downloadPath)
-
-
 def main():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser(description="Exchange files!")
@@ -130,15 +124,12 @@ def main():
     multiCastPort = 8006
     teiler = TeilerState()
     teiler.multiCastPort = multiCastPort
-
-    reactor.listenMulticast(multiCastPort, 
-                            PeerDiscovery(reactor, teiler.name, teiler.multiCastAddress, teiler.multiCastPort, teiler.tcpAddress, teiler.tcpPort), 
+    reactor.listenMulticast(multiCastPort,
+                            PeerDiscovery(teiler),
                             listenMultiple=True)
-                            
-    app = TeilerWindow(teiler)
     log.msg("Initiating Peer Discovery")
     
-    
+    app = TeilerWindow(teiler)
     # Initialize file transfer service
     fileReceiver = FileReceiverFactory(teiler, app)
     reactor.listenTCP(teiler.tcpPort, fileReceiver)
@@ -147,11 +138,10 @@ def main():
     # qt4reactor requires runReturn() in order to work
     reactor.runReturn()
     
-    # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,tcpAddress=teiler.tcpAddress)
+    # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,address=teiler.address)
     # Create an instance of the application window and run it
     
     app.run()
 
 if __name__ == '__main__':
-    download_path_exists()
     main()

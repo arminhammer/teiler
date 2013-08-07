@@ -1,143 +1,88 @@
-"""
-This module is resposible for peer discovery over UDP only.
-
-The process is simple. 
-1) Start up the client and broadcast a UDP datagram on a defined interval.
-2) Listen for other packets
-3) When another packet is heard, pull it into the list of the peers. 
-    But, if the peer is already in the list, do nothing.
-4) On disconnect, the client sends an exit message, letting the other 
-    users know that they are no longer online; making it safe for the 
-    client to disconnect
-"""
-
 import sys, json
 from twisted.python import log
-from twisted.internet import task
+from twisted.internet import task, reactor
 from twisted.internet.protocol import DatagramProtocol 
+from peerlist import TeilerPeer
 
+connectMsg = "CONNECT"
 heartbeatMsg = "HEARTBEAT"
 exitMsg = "EXIT"
 
 class Message(object):
-    """Contains basic location information for clients to use
-    to initiate a connection with this peer. Basically, just the user is,
-    what ip they are using, and what port to connect on
-    """
-    def __init__(self, message, name, tcpAddress, tcpPort):
+    """mesage to be sent across the wire"""
+    def __init__(self, message, name, address, tcpPort, sessionID):
         self.message = str(message)
         self.name = str(name)
-        self.address = str(tcpAddress)
+        self.address = str(address)
         self.tcpPort = str(tcpPort)
+        self.sessionID = str(sessionID)
 
     def serialize(self):
         return json.dumps({
-            "message": self.message,
-            "name": self.name,
-            "address" : self.address,
-            "tcpPort" : self.tcpPort,
-            })
-
-
-class Peer(object):
-    """Meant to store information for the TCP based protocols to use, such as the 
-    IP address, and port
-    
-    Each peer needs some sort of unique identifier. For now, the combination of port, address,
-    and name should suffice.
-    """
-    def __init__(self, name, address, port):
-        self.id = makeId(name, address, port)
-        self.name = name
-        self.address = address
-        self.tcpPort = port
-
-def makeId(name, address, port):
-    return name + '_' + address + '_' + str(port)
-
+                "message": self.message,
+                "name": self.name,
+                "address" : self.address,
+                "tcpPort" : self.tcpPort,
+                "sesionID" : self.sessionID
+                })
 
 class PeerDiscovery(DatagramProtocol):
     """
-    UDP protocol used to find others running the same program. 
-    The protocol will do several things, on program start, a connection
-    message will be sent; basically announcing itself as a node to the network.
-    Then the protocol will regularly send a heartbeat message at a defined interval.
-    Once the peer has decided to disconnect, it will send an exit message to alert 
-    the other nodes of its demise.
+    Broadcast the ip to all of the listeners on the channel
     """
-    def __init__(self, reactor, name, address, port, tcpAddress, tcpPort):
-        """Set up an instance of the PeerDiscovery protocol by creating the message 
-        information needed to broadcast other instances of the protocol running on the 
-        same network.
-        """
-        self.peers = []
-        self.reactor = reactor
-        self.id = makeId(name, address, port)
-        self.name = name
-        # datagram connection infomation
-        self.multiCastAddress = address
-        self.multiCastPort = port
-        # information that will be broadcast in the message
-        self.tcpAddress = tcpAddress
-        self.tcpPort = tcpPort
-
-    def sendMessage(self, message):
-        self.transport.write(message, (self.multiCastAddress, self.multiCastPort))
+    def __init__(self, teiler):
+        self.teiler = teiler
 
     def startProtocol(self):
         self.transport.setTTL(5)
-        print self.reactor
-        self.transport.joinGroup(self.multiCastAddress)
-        self.loop = task.LoopingCall(self.sendHeartBeat)
-        self.loop.start(5)
+        self.transport.joinGroup(self.teiler.multiCastAddress)
+        message = Message(connectMsg,
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
+                          ).serialize()
+        
+        self.transport.write(message, (self.teiler.multiCastAddress, 
+                                       self.teiler.multiCastPort))
+        log.msg("Sent {0} message: {1}".format(connectMsg, message))      
+        reactor.callLater(5.0, self.sendHeartBeat)
 
     def sendHeartBeat(self):
-        """Sends message alerting other peers to your presence."""
         message = Message(heartbeatMsg, 
-                          self.name, 
-                          self.tcpAddress, 
-                          self.tcpPort, 
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
                           ).serialize()
-        self.sendMessage(message)
-        log.msg("Sent " + message)
+
+        self.transport.write(message, 
+                             (self.teiler.multiCastAddress, 
+                              self.teiler.multiCastPort))
+        log.msg("Sent {0} message: {1}".format(heartbeatMsg, message))
+        reactor.callLater(5.0, self.sendHeartBeat)
 
     def stopProtocol(self):
-        """Gracefully tell peers to remove you."""
         message = Message(exitMsg, 
-                          self.name, 
-                          self.tcpAddress, 
-                          self.tcpPort, 
+                          self.teiler.name, 
+                          self.teiler.address, 
+                          self.teiler.tcpPort, 
+                          self.teiler.sessionID
                           ).serialize()
-        self.sendMessage(message)
-        self.loop.stop()
-        log.msg("Exit " + message)
+
+        self.transport.write(message, (self.teiler.multiCastAddress, self.teiler.multiCastPort))
+        log.msg("Sent {0} message: {1}".format(exitMsg, message))
 
     def datagramReceived(self, datagram, address):
-        """Handles how datagrams are read when they are received. Here, as this is a json
-        serialised message, we are pulling out the peer information and placing it in a 
-        list."""
-        log.msg("Decoding: " + datagram)
-
-        msg = json.loads(datagram)
-        peerName = msg['name']
-        peerAddress = msg['address']
-        peerPort = msg['tcpPort']
-        peerId = makeId(peerName, peerAddress, peerPort)
-
+        log.msg("Decoding: {0}".format(datagram))
+        message = json.loads(datagram)
+        peerName = message['name']
+        peerAddress = message['address']
         log.msg("Peer: Address: {0} Name: {1}".format(peerAddress, peerName))
-        if self.isPeer(peerId) == False:
-            newPeer = Peer(peerName, peerAddress, peerPort)
-            self.peers.append(newPeer)
+
+        log.msg("Does the list contain? {0}".format(self.teiler.peerList.contains(peerName)))    
+        if not self.teiler.peerList.contains(peerName):
+            newPeer = TeilerPeer(peerAddress, peerName)
+            self.teiler.peerList.addItem(newPeer)
             log.msg("Added new Peer: address: {0}, name: {1}".format(peerAddress, peerName))
             
-    def isPeer(self, id):
-        """Convenience method to make it easy to tell whether or not a peer is already a 
-        peer. """
-        if id == self.id:
-            return True # don't include yourself.
-        for p in self.peers:
-            if p.id == id:
-                return True
-        return False
-
-        

@@ -28,3 +28,15 @@ class SessionMessageFactory(protocol.ClientFactory):
     def clientConnectionLost(self, connector, reason):
         print "Connection lost - goodbye!"
         reactor.stop()
+
+'''
+# this connects the protocol to a server runing on port 8000
+def main():
+    f = EchoFactory()
+    reactor.connectTCP("localhost", 8000, f)
+    reactor.run()
+
+# this only runs if the module was *not* imported
+if __name__ == '__main__':
+    main()
+'''

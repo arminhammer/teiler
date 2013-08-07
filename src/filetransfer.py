@@ -19,9 +19,6 @@ fileMsg = "FILE"
 dirMsg = "DIR"
 endMsg = "EOT"
 
-class FileReceiverProtocol(LineReceiver):
-    """protocol that will be used to transfer files/raw data."""
-
 class Message(object):
     """mesage to be sent across the wire"""
     def __init__(self, command):

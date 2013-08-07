@@ -81,7 +81,7 @@ class TeilerWindow(QWidget):
         # self.questionMessage("Borscht", "Flarb")
         
     def sendFileToPeers(self, fileName):
-        log.msg("OMG Dropped {0}".format(fileName))
+        log.msg("File dropped {0}".format(fileName))
         filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
     def questionMessage(self, fileName, peerName):    

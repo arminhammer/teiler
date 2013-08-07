@@ -57,26 +57,18 @@ class TeilerPeerList(QListWidget):
             event.ignore()
 
     def dropEvent(self, event):
-        # print "This far? 1"
         mD = event.mimeData()
-        # print "This far? 2"
         if mD.hasUrls:
-            # print "This far? 3"
             event.setDropAction(Qt.CopyAction)
-            # print "This far? 4"
             event.accept()
-            # print "This far? 5"
             fileName = mD.urls()[0].toLocalFile()
             print "fileName is {0}".format(fileName)
             # for url in event.mimeData().urls():
             #    links.append(str(url.toLocalFile()))
-            print "This far? 6"
             links = []
             for url in event.mimeData().urls():
                 links.append(str(url.toLocalFile()))
                 print "Added {0}".format(str(url.toLocalFile()))
             self.emit(SIGNAL("dropped"), fileName)
-            print "This far? 7"
         else:
             event.ignore()
-            print "This far? 8"

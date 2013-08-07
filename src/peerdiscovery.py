@@ -46,7 +46,7 @@ class PeerDiscovery(DatagramProtocol):
         self.transport.write(message, (self.teiler.multiCastAddress, 
                                        self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(connectMsg, message))      
-        reactor.callLater(5.0, self.sendHeartBeat)
+        reactor.callLater(10.0, self.sendHeartBeat)
 
     def sendHeartBeat(self):
         message = Message(heartbeatMsg, 

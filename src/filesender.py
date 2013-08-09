@@ -55,7 +55,6 @@ class FileSenderClient(LineReceiver):
 
     def connectionMade(self):
         """ """
-        
         self.transport.write(beginMessage.serialize() + '\r\n')
         
     def lineReceived(self, line):

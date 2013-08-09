@@ -16,6 +16,7 @@ import filetransfer
 from filereceiver import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import TeilerPeer, TeilerPeerList
+from session import Session
         
 # Class to maintain the state of the program
 class TeilerState():
@@ -82,7 +83,10 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
-        filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
+        session = Session(str(fileName), self.teiler)
+        self.teiler.sessions.append(session)
+        session.process()
+        #filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",

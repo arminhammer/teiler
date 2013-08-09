@@ -3,7 +3,7 @@ from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
 import filetransfer
-from filetransfer import Message
+from session import Message
 from twisted.internet.defer import Deferred
 from twisted.python import log
 
@@ -103,7 +103,7 @@ class FileReceiverProtocol(LineReceiver):
     def connectionMade(self):
         """ """
         basic.LineReceiver.connectionMade(self)
-        print '\n + a connection was made'
+        print 'a connection was made'
         print ' * ', self.transport.getPeer()
 
     def connectionLost(self, reason):

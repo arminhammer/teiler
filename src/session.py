@@ -45,14 +45,14 @@ class Session(object):
         beginMessage = Message(beginMsg)
         beginMessage.fileName = self.fileName
         log.msg("Sending BEGIN")
-        f = SessionFactory(beginMessage)
+        f = SessionMessageFactory(beginMessage)
         self.status = "begun"
         reactor.connectTCP(self.address, self.port, f)
         
     def sendEnd(self):
         endMessage = Message(endMsg)
         log.msg("Sending EOT")
-        f = SessionFactory(endMessage)
+        f = SessionMessageFactory(endMessage)
         self.status = "finished"
         reactor.connectTCP(self.address, self.port, f)
     
@@ -100,9 +100,3 @@ class Session(object):
                 fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
                 fileMessage.fileSize = os.path.getsize(relFilePath)
                 self.transport.write(fileMessage)
-            #sender = FileSender()
-            #sender.CHUNK_SIZE = 4096
-            #d = sender.beginFileTransfer(open(path, 'rb'), self.transport, self._monitor)
-            #d.addCallback(self.cbTransferCompleted)
-            #d.addCallback(self.processTransferQueue())
-        

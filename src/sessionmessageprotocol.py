@@ -2,6 +2,9 @@ from twisted.internet import reactor, protocol
 
 class SessionMessageClient(protocol.Protocol):
     
+    def __init__(self, message):
+        self.message = message
+    
     def connectionMade(self):
         self.transport.write(self.message.serialize() + '\r\n')
     
@@ -20,14 +23,20 @@ class SessionMessageFactory(protocol.ClientFactory):
         """ """
         self.message = message
         self.session = session
+        
+    def buildProtocol(self, message):
+        print ' + building session protocol'
+        p = self.protocol(message)
+        p.factory = self
+        return p
 
     def clientConnectionFailed(self, connector, reason):
         print "Connection failed - goodbye!"
-        reactor.stop()
+        #reactor.stop()
     
     def clientConnectionLost(self, connector, reason):
         print "Connection lost - goodbye!"
-        reactor.stop()
+        #reactor.stop()
 
 '''
 # this connects the protocol to a server runing on port 8000

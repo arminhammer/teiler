@@ -19,7 +19,7 @@ from peerlist import TeilerPeer, TeilerPeerList
 from session import Session
         
 # Class to maintain the state of the program
-class TeilerState():
+class TeilerConfig():
     def __init__(self):
         self.address = utils.getLiveInterface()
         self.sessionID = utils.generateSessionID()
@@ -126,7 +126,7 @@ def main():
     
     # Initialize peer discovery using UDP multicast
     multiCastPort = 8006
-    teiler = TeilerState()
+    teiler = TeilerConfig()
     teiler.multiCastPort = multiCastPort
     reactor.listenMulticast(multiCastPort,
                             PeerDiscovery(teiler),

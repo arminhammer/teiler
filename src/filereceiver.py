@@ -2,8 +2,8 @@ import os, json
 from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
-import filetransfer
-from session import Message
+import session
+from session import Message, Session
 from twisted.internet.defer import Deferred
 from twisted.python import log
 
@@ -22,27 +22,27 @@ class FileReceiverProtocol(LineReceiver):
         d = Deferred()
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
-        if message['command'] == filetransfer.beginMsg:
+        if message['command'] == session.beginMsg:
             # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
             ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
             log.msg("OK is {0}".format(ok))
             if ok == "no":
                 log.msg("Download rejected")
-                rejectMessage = Message(filetransfer.rejectMsg)
+                rejectMessage = Message(session.rejectMsg)
                 self.transport.write(rejectMessage.serialize() + '\r\n')
             elif ok == "yes":
                 log.msg("The file is accepted!")
-                acceptMessage = Message(filetransfer.acceptMsg)
+                acceptMessage = Message(session.acceptMsg)
                 self.transport.write(acceptMessage.serialize() + '\r\n')
-        elif message['command'] == filetransfer.dirMsg:
+        elif message['command'] == session.dirMsg:
             dirName = message['dirName']
             d.addCallBack(self.createDirectory(dirName))
             d.addCallBack(self.sendReceivedMessage())
-        elif message['command'] == filetransfer.fileMsg:
+        elif message['command'] == session.fileMsg:
             fileNath = message['fileName']
             fileSize = message['fileSize']
             self.setRawMode()
-        elif message['command'] == filetransfer.endMsg:
+        elif message['command'] == session.endMsg:
             pass
         else:
             log.msg("Command not recognized.")

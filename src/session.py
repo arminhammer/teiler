@@ -45,6 +45,7 @@ class Session(object):
         beginMessage = Message(beginMsg)
         beginMessage.fileName = self.fileName
         log.msg("Sending BEGIN")
+        log.msg("Message is {0}".format(beginMsg))
         f = SessionMessageFactory(self, beginMessage)
         self.status = "begun"
         reactor.connectTCP(self.address, self.port, f)

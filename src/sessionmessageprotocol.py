@@ -21,12 +21,15 @@ class SessionMessageFactory(protocol.ClientFactory):
     
     def __init__(self, session, message):
         """ """
+        print "message init is {0}".format(message)
         self.message = message
+        print "session init is {0}".format(session)
         self.session = session
         
-    def buildProtocol(self, message):
+    def buildProtocol(self, addr):
         print ' + building session protocol'
-        p = self.protocol(message)
+        print "message is {0}".format(self.message)
+        p = self.protocol(self.message)
         p.factory = self
         return p
 

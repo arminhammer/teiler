@@ -41,12 +41,13 @@ class Session(object):
     def startTransfer(self):
         self.sendBeginning()
          
-    def processResponse(self, message):
-        log.msg("Response received: {0}".format(message))
-        if message['command'] == ACCEPT and status == 1:
+    def processResponse(self, msg):
+        log.msg("Response received: {0}".format(msg))
+        message = json.loads(msg)
+        if message['command'] == acceptMsg and self.status == 1:
             self.status = 2
             self.startFileSend()
-        elif message['command'] == REJECT and status == 1:
+        elif message['command'] == rejectMsg and self.status == 1:
             log.msg("File transfer was rejected.  Closing.")
         else:
             log.msg("NOT RECOGNIZED!")  
@@ -73,10 +74,10 @@ class Session(object):
         reactor.connectTCP(address, port, f)
         return controller.completed
     
-    def calcFiles(self):
+    def startFileSend(self):
             log.msg("Calculating files...")
-            if os.path.isdir(self.path):
-                for root, dirs, files in os.walk(self.path, topdown=True):
+            if os.path.isdir(self.fileName):
+                for root, dirs, files in os.walk(self.fileName, topdown=True):
                     for name in dirs:
                         self.transferQueue.put(os.path.join(root, name))
                     for name in files:
@@ -84,7 +85,7 @@ class Session(object):
                 reactor.callLater(self.processTransferQueue())
             else:
                 log.msg("Just sending a file...")
-                relfilePath = os.path.join(os.path.relpath(root, self.path), name)
+                relfilePath = os.path.join(os.path.relpath(root, self.fileName), name)
                 fileMessage = Message(filetransfer.fileMsg)
                 fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
                 fileMessage.fileSize = os.path.getsize(relFilePath)
@@ -101,13 +102,13 @@ class Session(object):
             reactor.callLater(self.cbTransferCompleted())
         else:
             if os.path.isdir(path):
-                relDirPath = os.path.join(os.path.relpath(root, self.path), path) 
-                dirMessage = filetransfer.Message(dirMessage)
-                dirMessage.dirName = "{0}/{1}".format(self.fileName, relDirPath)
+                #relDirPath = os.path.join(os.path.relpath(self.path), path) 
+                dirMessage = Message(dirMsg)
+                dirMessage.dirName = "{0}".format(self.fileName)
                 self.transport.write(dirMessage)
             else:
-                relfilePath = os.path.join(os.path.relpath(root, self.path), path)
-                fileMessage = filetransfer.Message(filetransfer.fileMsg)
-                fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
+                relfilePath = os.path.join(os.path.relpath(self.path), path)
+                fileMessage = Message(fileMsg)
+                fileMessage.fileName = "{0}".format(self.fileName, relfilePath)
                 fileMessage.fileSize = os.path.getsize(relFilePath)
                 self.transport.write(fileMessage)

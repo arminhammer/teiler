@@ -36,10 +36,20 @@ class Session(object):
         self.address = teiler.address
         self.port = teiler.tcpPort
         self.fileName = fileName
-        self.status = "initial"
-        
-    def process(self):
+        self.status = 0
+       
+    def startTransfer(self):
         self.sendBeginning()
+         
+    def processResponse(self, message):
+        log.msg("Response received: {0}".format(message))
+        if message['command'] == ACCEPT and status == 1:
+            self.status = 2
+            self.startFileSend()
+        elif message['command'] == REJECT and status == 1:
+            log.msg("File transfer was rejected.  Closing.")
+        else:
+            log.msg("NOT RECOGNIZED!")  
     
     def sendBeginning(self):
         beginMessage = Message(beginMsg)
@@ -47,7 +57,7 @@ class Session(object):
         log.msg("Sending BEGIN")
         log.msg("Message is {0}".format(beginMsg))
         f = SessionMessageFactory(self, beginMessage)
-        self.status = "begun"
+        self.status = 1
         reactor.connectTCP(self.address, self.port, f)
         
     def sendEnd(self):
@@ -63,8 +73,8 @@ class Session(object):
         reactor.connectTCP(address, port, f)
         return controller.completed
     
-    def initTransfer(self):
-            log.msg("Begin transfer")
+    def calcFiles(self):
+            log.msg("Calculating files...")
             if os.path.isdir(self.path):
                 for root, dirs, files in os.walk(self.path, topdown=True):
                     for name in dirs:
@@ -73,7 +83,7 @@ class Session(object):
                         self.transferQueue.put(os.path.join(root, name))
                 reactor.callLater(self.processTransferQueue())
             else:
-                log.msg("Just sending a file")
+                log.msg("Just sending a file...")
                 relfilePath = os.path.join(os.path.relpath(root, self.path), name)
                 fileMessage = Message(filetransfer.fileMsg)
                 fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)

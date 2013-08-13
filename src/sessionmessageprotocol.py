@@ -2,7 +2,8 @@ from twisted.internet import reactor, protocol
 
 class SessionMessageClient(protocol.Protocol):
     
-    def __init__(self, message):
+    def __init__(self, session, message):
+        self.session = session
         self.message = message
     
     def connectionMade(self):
@@ -29,7 +30,7 @@ class SessionMessageFactory(protocol.ClientFactory):
     def buildProtocol(self, addr):
         print ' + building session protocol'
         print "message is {0}".format(self.message)
-        p = self.protocol(self.message)
+        p = self.protocol(self.session, self.message)
         p.factory = self
         return p
 

@@ -85,7 +85,7 @@ class TeilerWindow(QWidget):
         log.msg("File dropped {0}".format(fileName))
         session = Session(str(fileName), self.teiler)
         self.teiler.sessions.append(session)
-        session.process()
+        session.startTransfer()
         #filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 
     def questionMessage(self, fileName, peerName):    

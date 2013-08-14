@@ -46,9 +46,12 @@ class Session(object):
         message = json.loads(msg)
         if message['command'] == acceptMsg and self.status == 1:
             self.status = 2
-            self.startFileSend()
+            reactor.callLater(0, self.startFileSend)
         elif message['command'] == rejectMsg and self.status == 1:
             log.msg("File transfer was rejected.  Closing.")
+        elif message['command'] == receivedMsg and self.status == 2:
+            log.msg("Receipt from receiver")
+            reactor.callLater(0, self.processTransferQueue)
         else:
             log.msg("NOT RECOGNIZED!")  
     
@@ -82,7 +85,7 @@ class Session(object):
                         self.transferQueue.put(os.path.join(root, name))
                     for name in files:
                         self.transferQueue.put(os.path.join(root, name))
-                reactor.callLater(self.processTransferQueue())
+                reactor.callLater(0, self.processTransferQueue)
             else:
                 log.msg("Just sending a file...")
                 relfilePath = os.path.join(os.path.relpath(root, self.fileName), name)
@@ -99,7 +102,7 @@ class Session(object):
         if path == None:
             endMessage = Message(filetransfer.endMsg)
             self.transport.write(endMessage)
-            reactor.callLater(self.cbTransferCompleted())
+            reactor.callLater(self.cbTransferCompleted)
         else:
             if os.path.isdir(path):
                 #relDirPath = os.path.join(os.path.relpath(self.path), path) 
@@ -108,7 +111,7 @@ class Session(object):
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                self.sendFile(self.fileName, self.address, self.port)
+                reactor.callLater(0, self.sendFile, self.fileName, self.address, self.port)
                 #relfilePath = os.path.join(os.path.relpath(self.path), path)
                 #fileMessage = Message(fileMsg)
                 #fileMessage.fileName = "{0}".format(self.fileName, relfilePath)

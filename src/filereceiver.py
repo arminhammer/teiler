@@ -6,6 +6,7 @@ import session
 from session import Message, Session
 from twisted.internet.defer import Deferred
 from twisted.python import log
+from twisted.internet import reactor
 
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
@@ -36,7 +37,7 @@ class FileReceiverProtocol(LineReceiver):
                 self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == session.dirMsg:
             dirName = message['dirName']
-            self.createDirectory(dirName)
+            reactor.callLater(0, self.createDirectory, dirName)
             receivedMessage = Message(session.receivedMsg)
             self.transport.write(receivedMessage.serialize() + '\r\n')
         elif message['command'] == session.fileMsg:
@@ -48,11 +49,11 @@ class FileReceiverProtocol(LineReceiver):
         else:
             log.msg("Command not recognized.")
         
-        def createDirectory(dirName):
-            pass
+    def createDirectory(self, dirName):
+        pass
         
-        def sendReceivedMessage():
-            pass
+    def sendReceivedMessage(self):
+        pass
         
         '''
         print ' ~ lineReceived:\n\t', line
@@ -108,6 +109,9 @@ class FileReceiverProtocol(LineReceiver):
         print ' * ', self.transport.getPeer()
 
     def connectionLost(self, reason):
+        log.msg("Connection on receiver side finished.")
+        
+    def fileFinished(self, reason):
         """ """
         basic.LineReceiver.connectionLost(self, reason)
         print ' - connectionLost'
@@ -129,7 +133,7 @@ class FileReceiverProtocol(LineReceiver):
             print '\n--> finished saving upload@ ' + self.outfilename
             client = self.instruction.get('client', 'anonymous')
 
-def fileinfo(fname):
+def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """
     return (os.system('file 2> /dev/null') != 0 and \
              os.path.exists(fname) and \

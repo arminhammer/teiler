@@ -36,8 +36,9 @@ class FileReceiverProtocol(LineReceiver):
                 self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == session.dirMsg:
             dirName = message['dirName']
-            d.addCallBack(self.createDirectory(dirName))
-            d.addCallBack(self.sendReceivedMessage())
+            self.createDirectory(dirName)
+            receivedMessage = Message(session.receivedMsg)
+            self.transport.write(receivedMessage.serialize() + '\r\n')
         elif message['command'] == session.fileMsg:
             fileNath = message['fileName']
             fileSize = message['fileSize']

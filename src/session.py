@@ -24,6 +24,9 @@ class Message(object):
     """mesage to be sent across the wire"""
     def __init__(self, command):
         self.command = command
+        
+    def __str__(self):
+        return self.serialize()
     
     def serialize(self):
         return json.dumps(self.__dict__)
@@ -38,6 +41,9 @@ class Session(object):
         self.fileName = fileName
         self.status = 0
        
+    def __str__(self):
+        return str(self.id)
+    
     def startTransfer(self):
         self.sendBeginning()
          

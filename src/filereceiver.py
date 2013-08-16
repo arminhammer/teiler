@@ -8,12 +8,13 @@ from session import Message, Session
 from twisted.internet.defer import Deferred
 from twisted.python import log
 from twisted.internet import reactor
+from sessionmessageprotocol import SessionMessageFactory
 
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
 
     def __init__(self, teiler, teilerWindow):
-        self.outfile = None
+        self.outFile = None
         self.remain = 0
         self.crc = 0
         self.teiler = teiler
@@ -91,7 +92,8 @@ class FileReceiverProtocol(LineReceiver):
                 #print remove_base + self.outfilename + reason
                 #os.remove(self.outfilename)
             receivedMessage = Message(session.receivedMsg)
-            self.transport.write(receivedMessage.serialize() + '\r\n')
+            f = SessionMessageFactory(self, receivedMessage)
+            reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
         
     def fileFinished(self, reason):
         """ """

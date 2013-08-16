@@ -95,12 +95,15 @@ class Session(object):
                         log.msg("QUEUE: Adding file {0}".format(name))
                 reactor.callLater(0, self.processTransferQueue)
             else:
+                ''' Needs testing! '''
+                '''
                 log.msg("Just sending a file...")
                 relfilePath = os.path.join(os.path.relpath(root, self.fileName), name)
                 fileMessage = Message(filetransfer.fileMsg)
                 fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
                 fileMessage.fileSize = os.path.getsize(relFilePath)
                 self.transport.write(fileMessage)
+                '''
                 
     def processTransferQueue(self):
         log.msg("Processing queue")
@@ -108,7 +111,8 @@ class Session(object):
         log.msg("Sending {0}".format(path))
         if path == None:
             endMessage = Message(filetransfer.endMsg)
-            self.transport.write(endMessage)
+            f = SessionMessageFactory(self, endMessage)
+            reactor.connectTCP(self.address, self.port, f)
             reactor.callLater(self.cbTransferCompleted)
         else:
             if os.path.isdir(path):

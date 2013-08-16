@@ -1,25 +1,23 @@
-import Queue
-import utils
+from binascii import crc32
 import os, json
-from twisted.protocols import basic
-from twisted.protocols.basic import LineReceiver
-from twisted.internet.protocol import ClientFactory
-import filetransfer
-from twisted.internet.defer import Deferred
-from twisted.python import log
-from twisted.internet import reactor
 
-class FileSenderClient(LineReceiver):
+from twisted.protocols import basic
+from twisted.internet.protocol import ServerFactory
+from twisted.internet.protocol import ClientFactory
+from twisted.protocols.basic import FileSender, LineReceiver
+from twisted.internet.defer import Deferred
+from twisted.internet import reactor
+import utils
+
+class FileSenderClient(basic.LineReceiver):
     """ file sender """
 
     def __init__(self, path, controller):
         """ """
         self.path = path
-        self.fileName = str(utils.getFilenameFromPath(path))
         self.controller = controller
 
-        if os.path.isfile(self.path):
-            self.infile = open(self.path, 'rb')
+        self.infile = open(self.path, 'rb')
         self.insize = os.stat(self.path).st_size
 
         self.result = None
@@ -48,30 +46,23 @@ class FileSenderClient(LineReceiver):
 
         return data
 
-    def cbTransferCompleted(self):
+    def cbTransferCompleted(self, lastsent):
         """ """
         self.completed = True
         self.transport.loseConnection()
 
     def connectionMade(self):
         """ """
-        self.transport.write(beginMessage.serialize() + '\r\n')
-        
-    def lineReceived(self, line):
-        message = json.loads(line)
-        log.msg("Sender received message {0}".format(message))
-        if message['command'] == filetransfer.rejectMsg:
-            log.msg("Received rejection.  Closing...")
-            self.loseConnection()
-        elif message['command'] == filetransfer.acceptMsg:
-            #d = Deferred()
-            reactor.callLater(self.initTransfer())
-            #d.addCallback(self.initTransfer())
-        elif message['command'] == filetransfer.receivedMsg:
-            pass
-        else:
-            log.msg("Command not recognized.")
-    
+        instruction = dict(file_size=self.insize,
+                           original_file_path=self.path)
+        instruction = json.dumps(instruction)
+        self.transport.write(instruction+'\r\n')
+        sender = FileSender()
+        sender.CHUNK_SIZE = 2 ** 16
+        d = sender.beginFileTransfer(self.infile, self.transport,
+                                     self._monitor)
+        d.addCallback(self.cbTransferCompleted)
+
     def connectionLost(self, reason):
         """
             NOTE: reason is a twisted.python.failure.Failure instance
@@ -79,12 +70,13 @@ class FileSenderClient(LineReceiver):
         from twisted.internet.error import ConnectionDone
         basic.LineReceiver.connectionLost(self, reason)
         print ' - connectionLost\n  * ', reason.getErrorMessage()
-        print ' * finished with', self.path
+        print ' * finished with',self.path
         self.infile.close()
         if self.completed:
             self.controller.completed.callback(self.result)
         else:
             self.controller.completed.errback(reason)
+        #reactor.stop()
 
 class FileSenderClientFactory(ClientFactory):
     """ file sender factory """
@@ -106,3 +98,9 @@ class FileSenderClientFactory(ClientFactory):
         p = self.protocol(self.path, self.controller)
         p.factory = self
         return p
+    
+def sendFile(path, address='localhost', port=1234,):
+    controller = type('test',(object,),{'cancel':False, 'total_sent':0,'completed':Deferred()})
+    f = FileSenderClientFactory(path, controller)
+    reactor.connectTCP(address, port, f)
+    return controller.completed

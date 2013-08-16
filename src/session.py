@@ -115,4 +115,4 @@ class Session(object):
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                reactor.callLater(0, self.sendFile, self.fileName, self.address, self.port)
+                reactor.callLater(0, self.sendFile, path, self.address, self.port)

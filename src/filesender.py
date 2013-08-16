@@ -8,6 +8,8 @@ from twisted.protocols.basic import FileSender, LineReceiver
 from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 import utils
+import session
+from session import Message
 
 class FileSenderClient(basic.LineReceiver):
     """ file sender """
@@ -53,10 +55,10 @@ class FileSenderClient(basic.LineReceiver):
 
     def connectionMade(self):
         """ """
-        instruction = dict(file_size=self.insize,
-                           original_file_path=self.path)
-        instruction = json.dumps(instruction)
-        self.transport.write(instruction+'\r\n')
+        fileHeader = Message(session.fileMsg)
+        fileHeader.fileSize = self.insize
+        fileHeader.fileName = self.path
+        self.transport.write(fileHeader.serialize() + '\r\n')
         sender = FileSender()
         sender.CHUNK_SIZE = 2 ** 16
         d = sender.beginFileTransfer(self.infile, self.transport,
@@ -76,7 +78,6 @@ class FileSenderClient(basic.LineReceiver):
             self.controller.completed.callback(self.result)
         else:
             self.controller.completed.errback(reason)
-        #reactor.stop()
 
 class FileSenderClientFactory(ClientFactory):
     """ file sender factory """
@@ -98,9 +99,3 @@ class FileSenderClientFactory(ClientFactory):
         p = self.protocol(self.path, self.controller)
         p.factory = self
         return p
-    
-def sendFile(path, address='localhost', port=1234,):
-    controller = type('test',(object,),{'cancel':False, 'total_sent':0,'completed':Deferred()})
-    f = FileSenderClientFactory(path, controller)
-    reactor.connectTCP(address, port, f)
-    return controller.completed

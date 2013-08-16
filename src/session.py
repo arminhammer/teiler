@@ -89,8 +89,10 @@ class Session(object):
                 for root, dirs, files in os.walk(self.fileName, topdown=True):
                     for name in dirs:
                         self.transferQueue.put(os.path.join(root, name))
+                        log.msg("QUEUE: Adding dir {0}".format(name))
                     for name in files:
                         self.transferQueue.put(os.path.join(root, name))
+                        log.msg("QUEUE: Adding file {0}".format(name))
                 reactor.callLater(0, self.processTransferQueue)
             else:
                 log.msg("Just sending a file...")

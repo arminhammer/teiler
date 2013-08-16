@@ -9,7 +9,7 @@ from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 import utils
 import session
-from session import Message
+#from session import Message
 
 class FileSenderClient(basic.LineReceiver):
     """ file sender """
@@ -55,7 +55,7 @@ class FileSenderClient(basic.LineReceiver):
 
     def connectionMade(self):
         """ """
-        fileHeader = Message(session.fileMsg)
+        fileHeader = session.Message(session.fileMsg)
         fileHeader.fileSize = self.insize
         fileHeader.fileName = self.path
         self.transport.write(fileHeader.serialize() + '\r\n')

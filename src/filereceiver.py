@@ -1,4 +1,5 @@
 import os, json
+from binascii import crc32
 from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
@@ -37,12 +38,15 @@ class FileReceiverProtocol(LineReceiver):
                 self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == session.dirMsg:
             dirName = message['dirName']
-            reactor.callLater(0, self.createDirectory, dirName)
+            reactor.callLater(0, self.createDirectory, self.teiler.downloadPath + dirName)
             receivedMessage = Message(session.receivedMsg)
             self.transport.write(receivedMessage.serialize() + '\r\n')
         elif message['command'] == session.fileMsg:
-            fileNath = message['fileName']
-            fileSize = message['fileSize']
+            self.fileName = message['fileName']
+            self.fileSize = message['fileSize']
+            log.msg("Vals are {0} and {1}".format(self.fileName, self.fileSize))
+            self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
+            log.msg("Saving file to {0}".format(self.outFile)) 
             self.setRawMode()
         elif message['command'] == session.endMsg:
             pass
@@ -50,57 +54,22 @@ class FileReceiverProtocol(LineReceiver):
             log.msg("Command not recognized.")
         
     def createDirectory(self, dirName):
-        pass
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        log.msg("Creating dir {0}".format(dirName))
         
     def sendReceivedMessage(self):
         pass
         
-        '''
-        print ' ~ lineReceived:\n\t', line
-        self.instruction = json.loads(line)
-        self.instruction.update(dict(client=self.transport.getPeer().host))
-        self.size = self.instruction['file_size']
-        self.original_fname = self.instruction.get('original_file_path',
-                                                   'not given by client')
-        
-        fileName = utils.getFilenameFromPath(self.original_fname)
-        log.msg("Opening file accept dialog")
-        # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
-        ok = self.teilerWindow.questionMessage(fileName, "peer")
-        log.msg("OK is {0}".format(ok))
-        if ok == "no":
-            log.msg("Download rejected")
-            return
-        else:
-            # Create the upload directory if not already present
-            uploaddir = self.teiler.downloadPath
-            print " * Using upload dir:", uploaddir
-            if not os.path.isdir(uploaddir):
-                os.makedirs(uploaddir)
-    
-            self.outfilename = os.path.join(uploaddir, fileName)
-    
-            print ' * Receiving into file@', self.outfilename
-            try:
-                self.outfile = open(self.outfilename, 'wb')
-            except Exception, value:
-                print ' ! Unable to open file', self.outfilename, value
-                self.transport.loseConnection()
-                return
-    
-            self.remain = int(self.size)
-            print ' & Entering raw mode.', self.outfile, self.remain
-            self.setRawMode()
-        '''
 
     def rawDataReceived(self, data):
         """ """
         if self.remain % 10000 == 0:
-            print '   & ', self.remain, '/', self.size
+            print '   & ', self.remain, '/', self.fileSize
         self.remain -= len(data)
 
         self.crc = crc32(data, self.crc)
-        self.outfile.write(data)
+        self.outFile.write(data)
 
     def connectionMade(self):
         """ """
@@ -110,6 +79,19 @@ class FileReceiverProtocol(LineReceiver):
 
     def connectionLost(self, reason):
         log.msg("Connection on receiver side finished.")
+        if self.outFile != None:
+            self.outFile.close()
+            if self.remain != 0:
+                print str(self.remain) + ')!=0'
+                remove_base = '--> removing tmpfile@'
+                if self.remain < 0:
+                    reason = ' .. file moved too much'
+                if self.remain > 0:
+                    reason = ' .. file moved too little'
+                #print remove_base + self.outfilename + reason
+                #os.remove(self.outfilename)
+            receivedMessage = Message(session.receivedMsg)
+            self.transport.write(receivedMessage.serialize() + '\r\n')
         
     def fileFinished(self, reason):
         """ """

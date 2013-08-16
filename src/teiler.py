@@ -29,7 +29,7 @@ class TeilerConfig():
         self.multiCastAddress = '230.0.0.30'
         self.multiCastPort = 8005
         self.tcpPort = 9988
-        self.downloadPath = "/home/armin/Downloads"
+        self.downloadPath = "/home/armin/teilerdown"
         self.sessions = []
 
 # Class for the GUI

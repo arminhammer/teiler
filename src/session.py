@@ -71,7 +71,7 @@ class Session(object):
         self.status = "finished"
         reactor.connectTCP(self.address, self.port, f)
     
-    def sendFile(path, address='localhost', port=1234,):
+    def sendFile(self, path, address='localhost', port=1234,):
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
         f = FileSenderClientFactory(path, controller)
         reactor.connectTCP(address, port, f)
@@ -96,7 +96,6 @@ class Session(object):
                 
     def processTransferQueue(self):
         log.msg("Processing queue")
-        #d = Deferred()
         path = self.transferQueue.get()
         log.msg("Sending {0}".format(path))
         if path == None:
@@ -105,15 +104,9 @@ class Session(object):
             reactor.callLater(self.cbTransferCompleted)
         else:
             if os.path.isdir(path):
-                #relDirPath = os.path.join(os.path.relpath(self.path), path) 
                 dirMessage = Message(dirMsg)
                 dirMessage.dirName = "{0}".format(self.fileName)
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
                 reactor.callLater(0, self.sendFile, self.fileName, self.address, self.port)
-                #relfilePath = os.path.join(os.path.relpath(self.path), path)
-                #fileMessage = Message(fileMsg)
-                #fileMessage.fileName = "{0}".format(self.fileName, relfilePath)
-                #fileMessage.fileSize = os.path.getsize(relFilePath)
-                #self.transport.write(fileMessage)

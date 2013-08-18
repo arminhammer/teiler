@@ -23,7 +23,7 @@ class Message(object):
                 "name": self.name,
                 "address" : self.address,
                 "tcpPort" : self.tcpPort,
-                "sesionID" : self.sessionID
+                "sessionID" : self.sessionID
                 })
 
 class PeerDiscovery(DatagramProtocol):

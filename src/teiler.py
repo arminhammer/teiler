@@ -50,6 +50,7 @@ class TeilerWindow(QWidget):
         self.teiler = teiler
         self.setWindowTitle('BlastShare')
         self.setMinimumSize(240, 480)
+        
         self.connect(self.teiler.peerList, SIGNAL("dropped"), self.sendFileToPeers)
 
         shareFilesAction = QAction(QIcon('exit.png'), '&Share File(s)', self)
@@ -74,8 +75,8 @@ class TeilerWindow(QWidget):
         fileMenu.addAction(exitAction)
 
         # Create the QVBoxLayout that lays out the whole form
-        # self.teiler.peerList.setAcceptDrops(True)
-        # self.teiler.peerList.setDragEnabled(True)
+        #self.teiler.peerList.setAcceptDrops(True)
+        #self.teiler.peerList.setDragEnabled(True)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(QMargins(0, 0, 0, 0))
@@ -91,10 +92,12 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
-        session = Session(str(fileName), self.teiler)
-        self.teiler.sessions[str(session.id)] = session
-        session.startTransfer()
-        #filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
+        selectedPeer = self.teiler.peerList.currentItem()
+        log.msg("Selected Peer is {0}".format(selectedPeer.name))
+        if selectedPeer:
+            session = Session(str(fileName), self.teiler)
+            self.teiler.sessions[str(session.id)] = session
+            session.startTransfer()
 
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",

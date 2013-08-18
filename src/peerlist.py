@@ -9,40 +9,34 @@ class TeilerPeer(QListWidgetItem):
         self.address = address
         self.name = name
         self.setText("\n  {0}\n  {1}\n".format(self.name, self.address))
-        # self.setAcceptDrops(True)
+        self.setSelected(False)
+        
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls:
+            event.accept()
+            self.setSelected(False)
+        else:
+            event.ignore()
 
 # Class that keeps track of the peers and displays them to the user
 class TeilerPeerList(QListWidget):
+    
     def __init__(self, parent=None):
         super(TeilerPeerList, self).__init__(parent)
-        # self.setDragEnabled(True)
+        self.setVisible(True)
         self.setAcceptDrops(True)
-        # self.teiler.peerList.setDragEnabled(True)
+        #self.teiler.peerList.setDragEnabled(True)
+        self.setViewMode(QListView.ListMode)
+        newPeer = TeilerPeer("testHostName", "testHost")
+        self.addItem(newPeer)
     
-    #what's this?
     def contains(self, peerName):
         for i in range(self.count()):
             item = self.item(i)
             if(peerName == item.name):
                 return True
         return False
-    '''
-    @Slot(QDragEnterEvent)
-    def dragEnterEvent(self, event):
-        m = event.mimeData()
-        if m.hasUrls():
-            self.dropFile = m.urls()[0].toLocalFile()
-            event.acceptProposedAction()
-
-    @Slot(QDropEvent)
-    def dropEvent(self, event):
-        # event.setDropAction(log.msg, "Drop accepted!")
-        # event.accept()
-        log.msg("OMG")
-        # else:
-        # event.ignore()
-    '''
-    
+   
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
             event.accept()
@@ -63,8 +57,6 @@ class TeilerPeerList(QListWidget):
             event.accept()
             fileName = mD.urls()[0].toLocalFile()
             print "fileName is {0}".format(fileName)
-            # for url in event.mimeData().urls():
-            #    links.append(str(url.toLocalFile()))
             links = []
             for url in event.mimeData().urls():
                 links.append(str(url.toLocalFile()))

@@ -20,6 +20,7 @@ fileMsg = "FILE"
 dirMsg = "DIR"
 endFileMsg = "EOF"
 endMsg = "EOT"
+resendMsg = "RESEND"
 
 class Message(object):
     """mesage to be sent across the wire"""
@@ -86,6 +87,7 @@ class Session(object):
     
     def startFileSend(self):
             log.msg("Calculating files...")
+            self.transferQueue.put(self.fileName)
             if os.path.isdir(self.fileName):
                 for root, dirs, files in os.walk(self.fileName, topdown=True):
                     for name in dirs:
@@ -95,7 +97,8 @@ class Session(object):
                         self.transferQueue.put(os.path.join(root, name))
                         log.msg("QUEUE: Adding file {0}".format(name))
                 reactor.callLater(0, self.processTransferQueue)
-            else:
+            #else:
+            #    pass
                 ''' Needs testing! '''
                 '''
                 log.msg("Just sending a file...")
@@ -107,24 +110,19 @@ class Session(object):
                 '''
                 
     def processTransferQueue(self):
-        log.msg("Processing queue.  Queue items remaining: {0}".format(self.transferQueue.qsize()))
-        path = self.transferQueue.get()
-        log.msg("Sending {0}".format(path))
-        if path == None:
-            endMessage = Message(filetransfer.endMsg)
+        remaining = self.transferQueue.qsize()
+        log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))
+        if remaining == 0:
+            endMessage = Message(endMsg)
             f = SessionMessageFactory(self, endMessage)
             reactor.connectTCP(self.address, self.port, f)
-            reactor.callLater(self.cbTransferCompleted)
         else:
+            path = self.transferQueue.get()
+            log.msg("Sending {0}".format(path))
             if os.path.isdir(path):
                 dirMessage = Message(dirMsg)
-                dirMessage.dirName = "{0}".format(self.fileName)
+                dirMessage.dirName = "{0}".format(path)
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                #d = self.sendFile(path, self.address, self.port)
-                #d.addCallback(self.processTransferQueue)
                 reactor.callLater(0, self.sendFile, path, self.address, self.port)
-                #d = sender.beginFileTransfer(self.infile, self.transport,
-                #                     self._monitor)
-                #d.addCallback(self.cbTransferCompleted)

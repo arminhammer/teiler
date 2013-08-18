@@ -55,7 +55,7 @@ class FileSenderClient(basic.LineReceiver):
         self.completed = True
         eofMsg = session.Message(session.endFileMsg)
         eofMsg.sessionID = self.sessionID
-        self.transport.write(eofMsg.serialize() + '\r\n')
+        #self.transport.write(eofMsg.serialize() + '\r\n')
         self.transport.loseConnection()
 
     def connectionMade(self):

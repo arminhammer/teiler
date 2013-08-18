@@ -21,6 +21,7 @@ class FileReceiverProtocol(LineReceiver):
         self.teiler = teiler
         self.teilerWindow = teilerWindow
         self.sessionID = 0
+        self.success = False
         
     def lineReceived(self, line):
         """ """
@@ -62,7 +63,8 @@ class FileReceiverProtocol(LineReceiver):
                 self.teiler.notifySession(sessionID, receivedMessage.serialize())
             #reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
         elif message['command'] == session.endMsg:
-            pass
+            log.msg("EOT message received!")
+            self.transport.loseConnection()
         else:
             log.msg("Command not recognized.")
         
@@ -79,19 +81,19 @@ class FileReceiverProtocol(LineReceiver):
         if self.remain % 10000 == 0:
             print '   & ', self.remain, '/', self.fileSize
         self.remain -= len(data)
-
         self.crc = crc32(data, self.crc)
         self.buffer += len(data)
-        log.msg("Buffer is: {0}, File Size is: {1}".format(self.buffer, self.fileSize))
+        #log.msg("Buffer is: {0}, File Size is: {1}".format(self.buffer, self.fileSize))
         if self.buffer < self.fileSize:
             self.outFile.write(data)
         elif self.buffer == self.fileSize:
             self.outFile.write(data)
-            self.setLineMode()
+            self.success = True
+            #self.setLineMode()
         else:
             left = self.buffer - self.fileSize
-            log.msg("{0} bytes left, {1} type".format(left, type(data)))
-            self.setLineMode()
+            log.msg("{0} bytes left, {1} type".format(left, data))
+            #self.setLineMode()
 
     def connectionMade(self):
         """ """
@@ -112,6 +114,14 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too little'
                 #print remove_base + self.outFile + reason
                 #os.remove(self.outfilename)
+            if self.success:
+                receivedMessage = Message(session.receivedMsg)
+                self.teiler.notifySession(self.sessionID, receivedMessage.serialize())
+            else:
+                resendMessage = Message(session.resendMsg)
+                self.teiler.notifySession(self.sessionID, resendMessage.serialize())
+            
+                
                 
 def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """

@@ -78,6 +78,9 @@ class FileReceiverProtocol(LineReceiver):
         log.msg("Buffer is: {0}, File Size is: {1}".format(self.buffer, self.fileSize))
         if self.buffer < self.fileSize:
             self.outFile.write(data)
+        elif self.buffer == self.fileSize:
+            self.outFile.write(data)
+            self.setLineMode()
         else:
             self.setLineMode()
 

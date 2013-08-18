@@ -107,7 +107,7 @@ class Session(object):
                 '''
                 
     def processTransferQueue(self):
-        log.msg("Processing queue")
+        log.msg("Processing queue.  Queue items remaining: {0}".format(self.transferQueue.qsize()))
         path = self.transferQueue.get()
         log.msg("Sending {0}".format(path))
         if path == None:
@@ -122,4 +122,9 @@ class Session(object):
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                reactor.callLater(0, self.sendFile, path, self.address, self.port)
+                d = self.sendFile(path, self.address, self.port)
+                d.addCallback(self.processTransferQueue())
+                #reactor.callLater(0, self.sendFile, path, self.address, self.port)
+                #d = sender.beginFileTransfer(self.infile, self.transport,
+                #                     self._monitor)
+                #d.addCallback(self.cbTransferCompleted)

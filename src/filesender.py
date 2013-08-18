@@ -51,9 +51,9 @@ class FileSenderClient(basic.LineReceiver):
     def cbTransferCompleted(self, lastsent):
         """ """
         self.completed = True
-        self.transport.loseConnection()
         eofMsg = session.Message(session.endFileMsg)
         self.transport.write(eofMsg.serialize() + '\r\n')
+        self.transport.loseConnection()
 
     def connectionMade(self):
         """ """

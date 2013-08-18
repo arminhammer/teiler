@@ -9,7 +9,6 @@ from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 import utils
 import session
-#from session import Message
 
 class FileSenderClient(basic.LineReceiver):
     """ file sender """
@@ -55,7 +54,6 @@ class FileSenderClient(basic.LineReceiver):
         self.completed = True
         eofMsg = session.Message(session.endFileMsg)
         eofMsg.sessionID = self.sessionID
-        #self.transport.write(eofMsg.serialize() + '\r\n')
         self.transport.loseConnection()
 
     def connectionMade(self):
@@ -70,9 +68,6 @@ class FileSenderClient(basic.LineReceiver):
         d = sender.beginFileTransfer(self.infile, self.transport,
                                      self._monitor)
         d.addCallback(self.cbTransferCompleted)
-    
-    #def lineReceived(self, line):
-    #    log.msg("++++ Sender received {0}".format(line))
 
     def connectionLost(self, reason):
         """

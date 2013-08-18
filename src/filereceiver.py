@@ -29,7 +29,6 @@ class FileReceiverProtocol(LineReceiver):
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
         if message['command'] == session.beginMsg:
-            # ok = self.teilerWindow.displayAcceptFileDialog(fileName)
             ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
             log.msg("OK is {0}".format(ok))
             if ok == "no":
@@ -61,7 +60,6 @@ class FileReceiverProtocol(LineReceiver):
             else:
                 receivedMessage = Message(session.receivedMsg)
                 self.teiler.notifySession(sessionID, receivedMessage.serialize())
-            #reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
         elif message['command'] == session.endMsg:
             log.msg("EOT message received!")
             self.transport.loseConnection()
@@ -83,17 +81,14 @@ class FileReceiverProtocol(LineReceiver):
         self.remain -= len(data)
         self.crc = crc32(data, self.crc)
         self.buffer += len(data)
-        #log.msg("Buffer is: {0}, File Size is: {1}".format(self.buffer, self.fileSize))
         if self.buffer < self.fileSize:
             self.outFile.write(data)
         elif self.buffer == self.fileSize:
             self.outFile.write(data)
             self.success = True
-            #self.setLineMode()
         else:
             left = self.buffer - self.fileSize
             log.msg("{0} bytes left, {1} type".format(left, data))
-            #self.setLineMode()
 
     def connectionMade(self):
         """ """
@@ -112,8 +107,6 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too much'
                 if self.remain > 0:
                     reason = ' .. file moved too little'
-                #print remove_base + self.outFile + reason
-                #os.remove(self.outfilename)
             if self.success:
                 receivedMessage = Message(session.receivedMsg)
                 self.teiler.notifySession(self.sessionID, receivedMessage.serialize())

@@ -37,7 +37,6 @@ class SessionMessageFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print "Connection failed - goodbye!"
 
-    
     def clientConnectionLost(self, connector, reason):
         print "Connection lost - goodbye!"
         

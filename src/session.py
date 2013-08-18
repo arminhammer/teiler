@@ -97,18 +97,7 @@ class Session(object):
                         self.transferQueue.put(os.path.join(root, name))
                         log.msg("QUEUE: Adding file {0}".format(name))
                 reactor.callLater(0, self.processTransferQueue)
-            #else:
-            #    pass
-                ''' Needs testing! '''
-                '''
-                log.msg("Just sending a file...")
-                relfilePath = os.path.join(os.path.relpath(root, self.fileName), name)
-                fileMessage = Message(filetransfer.fileMsg)
-                fileMessage.fileName = "{0}/{1}".format(self.fileName, relfilePath)
-                fileMessage.fileSize = os.path.getsize(relFilePath)
-                self.transport.write(fileMessage)
-                '''
-                
+       
     def processTransferQueue(self):
         remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))

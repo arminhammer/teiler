@@ -80,7 +80,7 @@ class Session(object):
     
     def sendFile(self, path, address='localhost', port=1234,):
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
-        f = FileSenderClientFactory(path, controller)
+        f = FileSenderClientFactory(path, controller, self.id)
         reactor.connectTCP(address, port, f)
         return controller.completed
     
@@ -122,9 +122,9 @@ class Session(object):
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                d = self.sendFile(path, self.address, self.port)
-                d.addCallback(self.processTransferQueue())
-                #reactor.callLater(0, self.sendFile, path, self.address, self.port)
+                #d = self.sendFile(path, self.address, self.port)
+                #d.addCallback(self.processTransferQueue)
+                reactor.callLater(0, self.sendFile, path, self.address, self.port)
                 #d = sender.beginFileTransfer(self.infile, self.transport,
                 #                     self._monitor)
                 #d.addCallback(self.cbTransferCompleted)

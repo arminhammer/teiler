@@ -20,6 +20,7 @@ class FileReceiverProtocol(LineReceiver):
         self.crc = 0
         self.teiler = teiler
         self.teilerWindow = teilerWindow
+        self.sessionID = 0
         
     def lineReceived(self, line):
         """ """
@@ -46,14 +47,20 @@ class FileReceiverProtocol(LineReceiver):
         elif message['command'] == session.fileMsg:
             self.fileName = message['fileName']
             self.fileSize = message['fileSize']
+            self.sessionID = message['sessionID']
             log.msg("Vals are {0} and {1}".format(self.fileName, self.fileSize))
             self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
             log.msg("Saving file to {0}".format(self.outFile)) 
             self.setRawMode()
         elif message['command'] == session.endFileMsg:
-            receivedMessage = Message(session.receivedMsg)
-            f = SessionMessageFactory(self, receivedMessage)
-            reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
+            sessionID = message['sessionID']
+            ''' Should check to see that sessions match '''
+            if sessionID != self.sessionID:
+                log.msg("Sessions do not match!")
+            else:
+                receivedMessage = Message(session.receivedMsg)
+                self.teiler.notifySession(sessionID, receivedMessage.serialize())
+            #reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
         elif message['command'] == session.endMsg:
             pass
         else:
@@ -82,6 +89,8 @@ class FileReceiverProtocol(LineReceiver):
             self.outFile.write(data)
             self.setLineMode()
         else:
+            left = self.buffer - self.fileSize
+            log.msg("{0} bytes left, {1} type".format(left, type(data)))
             self.setLineMode()
 
     def connectionMade(self):
@@ -103,32 +112,7 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too little'
                 #print remove_base + self.outFile + reason
                 #os.remove(self.outfilename)
-    
-    '''    
-    def fileFinished(self, reason):
-        """ """
-        basic.LineReceiver.connectionLost(self, reason)
-        print ' - connectionLost'
-        if self.outfile:
-            self.outfile.close()
-        # Problem uploading - tmpfile will be discarded
-        if self.remain != 0:
-            print str(self.remain) + ')!=0'
-            remove_base = '--> removing tmpfile@'
-            if self.remain < 0:
-                reason = ' .. file moved too much'
-            if self.remain > 0:
-                reason = ' .. file moved too little'
-            print remove_base + self.outfilename + reason
-            os.remove(self.outfilename)
-
-        # Success uploading - tmpfile will be saved to disk.
-        else:
-            print '\n--> finished saving upload@ ' + self.outfilename
-            client = self.instruction.get('client', 'anonymous')
-
-    '''
-
+                
 def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """
     return (os.system('file 2> /dev/null') != 0 and \

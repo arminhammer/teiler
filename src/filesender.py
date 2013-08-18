@@ -14,7 +14,7 @@ import session
 class FileSenderClient(basic.LineReceiver):
     """ file sender """
 
-    def __init__(self, path, controller):
+    def __init__(self, path, controller, sessionID):
         """ """
         self.path = path
         self.controller = controller
@@ -27,6 +27,8 @@ class FileSenderClient(basic.LineReceiver):
 
         self.controller.file_sent = 0
         self.controller.file_size = self.insize
+        
+        self.sessionID = str(sessionID)
 
     def _monitor(self, data):
         """ """
@@ -52,6 +54,7 @@ class FileSenderClient(basic.LineReceiver):
         """ """
         self.completed = True
         eofMsg = session.Message(session.endFileMsg)
+        eofMsg.sessionID = self.sessionID
         self.transport.write(eofMsg.serialize() + '\r\n')
         self.transport.loseConnection()
 
@@ -60,12 +63,16 @@ class FileSenderClient(basic.LineReceiver):
         fileHeader = session.Message(session.fileMsg)
         fileHeader.fileSize = self.insize
         fileHeader.fileName = self.path
+        fileHeader.sessionID = self.sessionID
         self.transport.write(fileHeader.serialize() + '\r\n')
         sender = FileSender()
         sender.CHUNK_SIZE = 2 ** 16
         d = sender.beginFileTransfer(self.infile, self.transport,
                                      self._monitor)
         d.addCallback(self.cbTransferCompleted)
+    
+    #def lineReceived(self, line):
+    #    log.msg("++++ Sender received {0}".format(line))
 
     def connectionLost(self, reason):
         """
@@ -85,10 +92,11 @@ class FileSenderClientFactory(ClientFactory):
     """ file sender factory """
     protocol = FileSenderClient
 
-    def __init__(self, path, controller):
+    def __init__(self, path, controller, sessionID):
         """ """
         self.path = path
         self.controller = controller
+        self.sessionID = sessionID
 
     def clientConnectionFailed(self, connector, reason):
         """ """
@@ -98,6 +106,6 @@ class FileSenderClientFactory(ClientFactory):
     def buildProtocol(self, addr):
         """ """
         print ' + building protocol'
-        p = self.protocol(self.path, self.controller)
+        p = self.protocol(self.path, self.controller, self.sessionID)
         p.factory = self
         return p

@@ -30,7 +30,16 @@ class TeilerConfig():
         self.multiCastPort = 8005
         self.tcpPort = 9988
         self.downloadPath = "/home/armin/teilerdown"
-        self.sessions = []
+        self.sessions = {}
+        
+    def notifySession(self, sessionID, message):
+        log.msg("Printing sessions:")
+        for k,v in self.sessions.iteritems():
+            log.msg("Key: {0}, Value: {1}".format(k, v))
+        if not self.sessions.has_key(sessionID):
+            log.msg("Session key cannot be found!")
+        else:
+            self.sessions[sessionID].processResponse(message)
 
 # Class for the GUI
 class TeilerWindow(QWidget):
@@ -84,7 +93,7 @@ class TeilerWindow(QWidget):
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
         session = Session(str(fileName), self.teiler)
-        self.teiler.sessions.append(session)
+        self.teiler.sessions[str(session.id)] = session
         session.startTransfer()
         #filetransfer.sendFile(str(fileName), port=self.teiler.tcpPort, address=self.teiler.address)
 

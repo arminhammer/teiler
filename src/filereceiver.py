@@ -16,6 +16,7 @@ class FileReceiverProtocol(LineReceiver):
     def __init__(self, teiler, teilerWindow):
         self.outFile = None
         self.remain = 0
+        self.buffer = 0
         self.crc = 0
         self.teiler = teiler
         self.teilerWindow = teilerWindow
@@ -49,6 +50,10 @@ class FileReceiverProtocol(LineReceiver):
             self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
             log.msg("Saving file to {0}".format(self.outFile)) 
             self.setRawMode()
+        elif message['command'] == session.endFileMsg:
+            receivedMessage = Message(session.receivedMsg)
+            f = SessionMessageFactory(self, receivedMessage)
+            reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
         elif message['command'] == session.endMsg:
             pass
         else:
@@ -62,7 +67,6 @@ class FileReceiverProtocol(LineReceiver):
     def sendReceivedMessage(self):
         pass
         
-
     def rawDataReceived(self, data):
         """ """
         if self.remain % 10000 == 0:
@@ -70,7 +74,12 @@ class FileReceiverProtocol(LineReceiver):
         self.remain -= len(data)
 
         self.crc = crc32(data, self.crc)
-        self.outFile.write(data)
+        self.buffer += len(data)
+        log.msg("Buffer is: {0}, File Size is: {1}".format(self.buffer, self.fileSize))
+        if self.buffer < self.fileSize:
+            self.outFile.write(data)
+        else:
+            self.setLineMode()
 
     def connectionMade(self):
         """ """
@@ -89,12 +98,10 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too much'
                 if self.remain > 0:
                     reason = ' .. file moved too little'
-                #print remove_base + self.outfilename + reason
+                #print remove_base + self.outFile + reason
                 #os.remove(self.outfilename)
-            receivedMessage = Message(session.receivedMsg)
-            f = SessionMessageFactory(self, receivedMessage)
-            reactor.connectTCP(self.teiler.address, self.teiler.tcpPort, f)
-        
+    
+    '''    
     def fileFinished(self, reason):
         """ """
         basic.LineReceiver.connectionLost(self, reason)
@@ -116,6 +123,8 @@ class FileReceiverProtocol(LineReceiver):
         else:
             print '\n--> finished saving upload@ ' + self.outfilename
             client = self.instruction.get('client', 'anonymous')
+
+    '''
 
 def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """

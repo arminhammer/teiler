@@ -18,6 +18,7 @@ rejectMsg = "REJECT"
 receivedMsg = "RECEIVED"
 fileMsg = "FILE"
 dirMsg = "DIR"
+endFileMsg = "EOF"
 endMsg = "EOT"
 
 class Message(object):

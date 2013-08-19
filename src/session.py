@@ -24,8 +24,9 @@ resendMsg = "RESEND"
 
 class Message(object):
     """mesage to be sent across the wire"""
-    def __init__(self, command):
+    def __init__(self, command, sessionID="0000"):
         self.command = command
+        self.sessionID = sessionID
         
     def __str__(self):
         return self.serialize()
@@ -64,7 +65,7 @@ class Session(object):
             log.msg("NOT RECOGNIZED!")  
     
     def sendBeginning(self):
-        beginMessage = Message(beginMsg)
+        beginMessage = Message(beginMsg, self.id)
         beginMessage.fileName = self.fileName
         log.msg("Sending BEGIN")
         log.msg("Message is {0}".format(beginMsg))
@@ -73,7 +74,7 @@ class Session(object):
         reactor.connectTCP(self.address, self.port, f)
         
     def sendEnd(self):
-        endMessage = Message(endMsg)
+        endMessage = Message(endMsg, self.id)
         log.msg("Sending EOT")
         f = SessionMessageFactory(endMessage)
         self.status = "finished"
@@ -103,14 +104,14 @@ class Session(object):
         remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))
         if remaining == 0:
-            endMessage = Message(endMsg)
+            endMessage = Message(endMsg, self.id)
             f = SessionMessageFactory(self, endMessage)
             reactor.connectTCP(self.address, self.port, f)
         else:
             path = self.transferQueue.get()
             log.msg("Sending {0}".format(path))
             if os.path.isdir(path):
-                dirMessage = Message(dirMsg)
+                dirMessage = Message(dirMsg, self.id)
                 dirMessage.dirName = "{0}".format(path)
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)

@@ -83,7 +83,7 @@ def make_files(filename):
                 _make_dir(line)
 
 def generateSessionID():
-    return uuid.UUID(bytes = M2Crypto.m2.rand_bytes(16))
+    return str(uuid.UUID(bytes = M2Crypto.m2.rand_bytes(16)))
 
 def getFilenameFromPath(path):
     head, tail = ntpath.split(path)

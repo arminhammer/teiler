@@ -29,10 +29,10 @@ class TeilerConfig():
         self.multiCastPort = 8005
         self.tcpPort = 9989
         self.downloadPath = "/home/armin/teilerdown"
-        ''' Sessions currently sending'''
+        ''' Sessions currently sending, full Session objects'''
         self.sessions = {}
-        ''' Sessions currently downloading '''
-        self.dlSessions = {}
+        ''' Sessions currently downloading, only the Session IDs '''
+        self.dlSessions = set()
         
     def notifySession(self, sessionID, message):
         log.msg("Printing sessions:")

@@ -37,13 +37,19 @@ class FileReceiverProtocol(LineReceiver):
                 self.transport.write(rejectMessage.serialize() + '\r\n')
             elif ok == "yes":
                 log.msg("The file is accepted!")
+                self.teiler.dlSessions.add(message['sessionID'])
                 acceptMessage = Message(session.acceptMsg)
                 self.transport.write(acceptMessage.serialize() + '\r\n')
         elif message['command'] == session.dirMsg:
             dirName = message['dirName']
-            reactor.callLater(0, self.createDirectory, self.teiler.downloadPath + dirName)
-            receivedMessage = Message(session.receivedMsg)
-            self.transport.write(receivedMessage.serialize() + '\r\n')
+            msgSession = message['sessionID']
+            if message['sessionID'] in self.teiler.dlSessions:
+                reactor.callLater(0, self.createDirectory, self.teiler.downloadPath + dirName)
+                receivedMessage = Message(session.receivedMsg)
+                self.transport.write(receivedMessage.serialize() + '\r\n')
+            else:
+                log.msg("Dir Message was not in a proper session!")
+                self.transport.loseConnection()
         elif message['command'] == session.fileMsg:
             self.fileName = message['fileName']
             self.fileSize = message['fileSize']
@@ -52,17 +58,19 @@ class FileReceiverProtocol(LineReceiver):
             self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
             log.msg("Saving file to {0}".format(self.outFile)) 
             self.setRawMode()
-        elif message['command'] == session.endFileMsg:
-            sessionID = message['sessionID']
-            ''' Should check to see that sessions match '''
-            if sessionID != self.sessionID:
-                log.msg("Sessions do not match!")
-            else:
-                receivedMessage = Message(session.receivedMsg)
-                self.teiler.notifySession(sessionID, receivedMessage.serialize())
+        #elif message['command'] == session.endFileMsg:
+        #    sessionID = message['sessionID']
+        #    ''' Should check to see that sessions match '''
+        #    if sessionID != self.sessionID:
+        #        log.msg("Sessions do not match!")
+        #    else:
+        #        receivedMessage = Message(session.receivedMsg)
+        #        self.teiler.notifySession(sessionID, receivedMessage.serialize())
         elif message['command'] == session.endMsg:
-            log.msg("EOT message received!")
-            self.transport.loseConnection()
+            msgSession = message['sessionID']
+            if msgSession in self.teiler.dlSessions:
+                log.msg("EOT message received!")
+                self.transport.loseConnection()
         else:
             log.msg("Command not recognized.")
         

@@ -78,11 +78,13 @@ class PeerDiscovery(DatagramProtocol):
         message = json.loads(datagram)
         peerName = message['name']
         peerAddress = message['address']
+        peerPort = message['tcpPort']
+        peerID = message['sessionID']
         log.msg("Peer: Address: {0} Name: {1}".format(peerAddress, peerName))
 
-        log.msg("Does the list contain? {0}".format(self.teiler.peerList.contains(peerName)))    
-        if not self.teiler.peerList.contains(peerName):
-            newPeer = TeilerPeer(peerAddress, peerName)
+        log.msg("Does the list contain? {0}".format(self.teiler.peerList.contains(peerID, peerAddress, peerPort)))    
+        if not self.teiler.peerList.contains(peerID, peerAddress, peerPort):
+            newPeer = TeilerPeer(peerID, peerName, peerAddress, peerPort)
             self.teiler.peerList.addItem(newPeer)
-            log.msg("Added new Peer: address: {0}, name: {1}".format(peerAddress, peerName))
+            log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             

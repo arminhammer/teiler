@@ -35,11 +35,11 @@ class Message(object):
 
 class Session(object):
     
-    def __init__(self, fileName, teiler):
+    def __init__(self, fileName, teiler, address, port):
         self.id = utils.generateSessionID()
         self.transferQueue = Queue.Queue()
-        self.address = teiler.address
-        self.port = teiler.tcpPort
+        self.address = address
+        self.port = port
         self.fileName = fileName
         self.status = 0
        

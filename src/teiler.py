@@ -27,7 +27,7 @@ class TeilerConfig():
         self.messages = []
         self.multiCastAddress = '230.0.0.30'
         self.multiCastPort = 8005
-        self.tcpPort = 9988
+        self.tcpPort = 9989
         self.downloadPath = "/home/armin/teilerdown"
         self.sessions = {}
         
@@ -92,10 +92,10 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
-        selectedPeer = self.teiler.peerList.currentItem()
-        log.msg("Selected Peer is {0}".format(selectedPeer.name))
-        if selectedPeer:
-            session = Session(str(fileName), self.teiler)
+        #selectedPeer = self.teiler.peerList.currentItem()
+        #log.msg("Selected Peer is {0}".format(selectedPeer.name))
+        for peer in self.teiler.peerList.iterAllItems():
+            session = Session(str(fileName), self.teiler, peer.address, peer.port)
             self.teiler.sessions[str(session.id)] = session
             session.startTransfer()
 
@@ -148,7 +148,7 @@ def main():
     # Initialize file transfer service
     fileReceiver = FileReceiverFactory(teiler, app)
     reactor.listenTCP(teiler.tcpPort, fileReceiver)
-    log.msg("Starting file listener on ", teiler.tcpPort)
+    log.msg("Starting file listener on {0}".format(teiler.tcpPort))
     
     # qt4reactor requires runReturn() in order to work
     reactor.runReturn()

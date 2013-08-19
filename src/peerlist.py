@@ -1,14 +1,17 @@
 # from PySide import QtCore
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+import utils
 
 # Class to represent a peer on the network and the gui
 class TeilerPeer(QListWidgetItem):
-    def __init__(self, address, name):
+    def __init__(self, id, name, address, port):
         QListWidgetItem.__init__(self)
+        self.id = id
         self.address = address
         self.name = name
-        self.setText("\n  {0}\n  {1}\n".format(self.name, self.address))
+        self.port = int(port)
+        self.setText("\n  {0}\n  {1}:{2}\n".format(self.name, self.address, self.port))
         self.setSelected(False)
         
     def dragEnterEvent(self, event):
@@ -27,15 +30,24 @@ class TeilerPeerList(QListWidget):
         self.setAcceptDrops(True)
         #self.teiler.peerList.setDragEnabled(True)
         self.setViewMode(QListView.ListMode)
-        newPeer = TeilerPeer("testHostName", "testHost")
+        
+        ''' For testing '''
+        id = utils.generateSessionID()
+        newPeer = TeilerPeer(id, "testHostName", "testHost", 9989)
         self.addItem(newPeer)
     
-    def contains(self, peerName):
+    def contains(self, peerID, peerAddress, peerPort):
         for i in range(self.count()):
             item = self.item(i)
-            if(peerName == item.name):
-                return True
+            if peerID == item.id:
+                if(peerAddress == item.address):
+                    if(int(peerPort) == item.port):
+                        return True
         return False
+    
+    def iterAllItems(self):
+        for i in range(self.count()):
+            yield self.item(i)
    
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:

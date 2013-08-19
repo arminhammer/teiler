@@ -29,7 +29,10 @@ class TeilerConfig():
         self.multiCastPort = 8005
         self.tcpPort = 9989
         self.downloadPath = "/home/armin/teilerdown"
+        ''' Sessions currently sending'''
         self.sessions = {}
+        ''' Sessions currently downloading '''
+        self.dlSessions = {}
         
     def notifySession(self, sessionID, message):
         log.msg("Printing sessions:")
@@ -39,6 +42,9 @@ class TeilerConfig():
             log.msg("Session key cannot be found!")
         else:
             self.sessions[sessionID].processResponse(message)
+            
+    def closeSession(self, session):
+        del self.sessions[session.id]
 
 # Class for the GUI
 class TeilerWindow(QWidget):

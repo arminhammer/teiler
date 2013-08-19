@@ -78,6 +78,7 @@ class Session(object):
         f = SessionMessageFactory(endMessage)
         self.status = "finished"
         reactor.connectTCP(self.address, self.port, f)
+        teiler.closeSession(self)
     
     def sendFile(self, path, address='localhost', port=1234,):
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})

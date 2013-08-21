@@ -3,11 +3,13 @@ from twisted.python import log
 from twisted.internet import task, reactor
 from twisted.internet.protocol import DatagramProtocol 
 from peerlist import TeilerPeer
+from message import Message
 
 connectMsg = "CONNECT"
 heartbeatMsg = "HEARTBEAT"
 exitMsg = "EXIT"
 
+'''
 class Message(object):
     """mesage to be sent across the wire"""
     def __init__(self, message, name, address, tcpPort, sessionID):
@@ -25,6 +27,7 @@ class Message(object):
                 "tcpPort" : self.tcpPort,
                 "sessionID" : self.sessionID
                 })
+'''
 
 class PeerDiscovery(DatagramProtocol):
     """
@@ -36,41 +39,35 @@ class PeerDiscovery(DatagramProtocol):
     def startProtocol(self):
         self.transport.setTTL(5)
         self.transport.joinGroup(self.teiler.multiCastAddress)
-        message = Message(connectMsg,
-                          self.teiler.name, 
-                          self.teiler.address, 
-                          self.teiler.tcpPort, 
-                          self.teiler.sessionID
-                          ).serialize()
+        message = Message(connectMsg, self.teiler.sessionID)
+        message.name = self.teiler.name
+        message.address = self.teiler.address
+        message.tcpPort = self.teiler.tcpPort
         
-        self.transport.write(message, (self.teiler.multiCastAddress, 
+        self.transport.write(message.serialize() + '\r\n', (self.teiler.multiCastAddress, 
                                        self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(connectMsg, message))      
         reactor.callLater(10.0, self.sendHeartBeat)
 
     def sendHeartBeat(self):
-        message = Message(heartbeatMsg, 
-                          self.teiler.name, 
-                          self.teiler.address, 
-                          self.teiler.tcpPort, 
-                          self.teiler.sessionID
-                          ).serialize()
+        message = Message(heartbeatMsg, self.teiler.sessionID)
+        message.name = self.teiler.name
+        message.address = self.teiler.address
+        message.tcpPort = self.teiler.tcpPort
 
-        self.transport.write(message, 
+        self.transport.write(message.serialize() + '\r\n', 
                              (self.teiler.multiCastAddress, 
                               self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(heartbeatMsg, message))
         reactor.callLater(5.0, self.sendHeartBeat)
 
     def stopProtocol(self):
-        message = Message(exitMsg, 
-                          self.teiler.name, 
-                          self.teiler.address, 
-                          self.teiler.tcpPort, 
-                          self.teiler.sessionID
-                          ).serialize()
-
-        self.transport.write(message, (self.teiler.multiCastAddress, self.teiler.multiCastPort))
+        message = Message(exitMsg, self.teiler.sessionID)
+        message.name = self.teiler.name
+        message.address = self.teiler.address
+        message.tcpPort = self.teiler.tcpPort
+        
+        self.transport.write(message.serialize() + '\r\n', (self.teiler.multiCastAddress, self.teiler.multiCastPort))
         log.msg("Sent {0} message: {1}".format(exitMsg, message))
 
     def datagramReceived(self, datagram, address):

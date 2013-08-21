@@ -56,13 +56,14 @@ class TeilerConfig():
 # Class for the GUI
 class TeilerWindow(QWidget):
     """The main front end for the application."""
-    def __init__(self, peerList):
+    def __init__(self, config):
         # Initialize the object as a QWidget and
         # set its title and minimum width
 
         QWidget.__init__(self)
 
-        self.peerList = peerList
+        self.config = config
+        self.peerList = config.peerList
         self.setWindowTitle('BlastShare')
         self.setMinimumSize(240, 480)
         
@@ -111,9 +112,9 @@ class TeilerWindow(QWidget):
         log.msg("File dropped {0}".format(fileName))
         #selectedPeer = self.teiler.peerList.currentItem()
         #log.msg("Selected Peer is {0}".format(selectedPeer.name))
-        for peer in self.teiler.peerList.iterAllItems():
-            session = Session(str(fileName), self.teiler, peer.address, peer.port)
-            self.teiler.sessions[str(session.id)] = session
+        for peer in self.peerList.iterAllItems():
+            session = Session(str(fileName), self.config, peer.address, peer.port)
+            self.config.sessions[str(session.id)] = session
             session.startTransfer()
 
     def questionMessage(self, fileName, peerName):    
@@ -188,22 +189,19 @@ def main():
                                 config.address,
                                 config.tcpPort),
                             listenMultiple=True)
+
+    app = TeilerWindow(config.peerList)
     
-    fileReceiver = FileReceiverFactory(config)
+    fileReceiver = FileReceiverFactory(config, app)
     reactor.listenTCP(config.tcpPort, fileReceiver)
-    
-    app = TeilerWindow(teiler)
+
     # Initialize file transfer service
-    fileReceiver = FileReceiverFactory(teiler, app)
-    reactor.listenTCP(teiler.tcpPort, fileReceiver)
-    log.msg("Starting file listener on {0}".format(teiler.tcpPort))
-    log.msg("Starting file listener on ", config.tcpPort)
+    log.msg("Starting file listener on {0}".format(config.tcpPort))
     
     reactor.runReturn()
     
     # Create an instance of the application window and run it
     
-    app = TeilerWindow(config.peerList)
     app.run()
 
 if __name__ == '__main__':

@@ -91,37 +91,35 @@ class PeerDiscovery(DatagramProtocol):
         peerName = msg['name']
         peerAddress = msg['address']
         peerPort = msg['tcpPort']
-        peerMsg = msg['message']
-        peerPort = message['tcpPort']
-        peerID = message['sessionID']
+        peerCommand = msg['command']
+        peerPort = msg['tcpPort']
+        peerID = msg['sessionID']
         log.msg("Peer: Address: {0} Name: {1}".format(peerAddress, peerName))
 
-        log.msg("Does the list contain? {0}".format(self.teiler.peerList.contains(peerID, peerAddress, peerPort)))    
-        if not self.teiler.peerList.contains(peerID, peerAddress, peerPort):
+        log.msg("Does the list contain? {0}".format(self.peers.contains(peerID, peerAddress, peerPort)))    
+        if not self.peers.contains(peerID, peerAddress, peerPort):
             newPeer = TeilerPeer(peerID, peerName, peerAddress, peerPort)
-            self.teiler.peerList.addItem(newPeer)
+            self.peers.addItem(newPeer)
             log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             
-        if peerMsg == exitMsg:
-            if self.isPeer(peerId):
+        if peerCommand == exitMsg:
+            if self.isPeer(peerID, peerAddress, peerPort):
                 log.msg('dropping a peer')
                 self.removePeer(peerId)
 
-        elif peerMsg == heartbeatMsg:
-            if self.isPeer(peerId) == False:
+        elif peerCommand == heartbeatMsg:
+            if self.isPeer(peerID, peerAddress, peerPort) == False:
                 newPeer = Peer(peerName, peerAddress, peerPort)
                 self.addPeer(newPeer)
                 log.msg("Added new Peer: address: {0}, name: {1}".format(peerAddress, peerName))
             
-    def isPeer(self, id):
+    def isPeer(self, id, address, port):
         """Convenience method to make it easy to tell whether or not a peer 
         is already a peer. """
-        return id in self.peers # for use with default dict
+        return self.peers.contains(id, address, port) # for use with default dict
 
     def removePeer(self, id):
         del self.peers[id]
 
     def addPeer(self, peer):
         self.peers[peer.id] = peer
-
-        

@@ -14,7 +14,6 @@ from twisted.python import log
 from twisted.internet import reactor
 from filereceiver import FileReceiverFactory
 
-from filetransfer import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import TeilerPeer, TeilerPeerList
 from session import Session
@@ -67,7 +66,6 @@ class TeilerWindow(QWidget):
         self.setWindowTitle('BlastShare')
         self.setMinimumSize(240, 480)
         
-
         # connects the signals!
         self.connect(self.peerList, 
                      SIGNAL("dropped"), self.sendFileToPeers)
@@ -160,12 +158,15 @@ def main():
     
     # Initialize peer discovery using UDP multicast
     multiCastPort = 8006
+    '''
     teiler = TeilerConfig()
     teiler.multiCastPort = multiCastPort
     reactor.listenMulticast(multiCastPort,
                             PeerDiscovery(teiler),
                             listenMultiple=True)
     log.msg("Initiating Peer Discovery")
+    '''
+    
     config = TeilerConfig(utils.getLiveInterface(), #ip
                           9998, #tcp port
                           utils.generateSessionID(),
@@ -201,7 +202,6 @@ def main():
     
     # Create an instance of the application window and run it
     
-        
     app = TeilerWindow(config.peerList)
     app.run()
 

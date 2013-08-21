@@ -23,20 +23,6 @@ endFileMsg = "EOF"
 endMsg = "EOT"
 resendMsg = "RESEND"
 
-'''
-class Message(object):
-    """mesage to be sent across the wire"""
-    def __init__(self, command, sessionID="0000"):
-        self.command = command
-        self.sessionID = sessionID
-        
-    def __str__(self):
-        return self.serialize()
-    
-    def serialize(self):
-        return json.dumps(self.__dict__)
-'''
-
 class Session(object):
     
     def __init__(self, fileName, teiler, address, port):

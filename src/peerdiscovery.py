@@ -9,26 +9,6 @@ connectMsg = "CONNECT"
 heartbeatMsg = "HEARTBEAT"
 exitMsg = "EXIT"
 
-'''
-class Message(object):
-    """mesage to be sent across the wire"""
-    def __init__(self, message, name, address, tcpPort, sessionID):
-        self.message = str(message)
-        self.name = str(name)
-        self.address = str(address)
-        self.tcpPort = str(tcpPort)
-        self.sessionID = str(sessionID)
-
-    def serialize(self):
-        return json.dumps({
-                "message": self.message,
-                "name": self.name,
-                "address" : self.address,
-                "tcpPort" : self.tcpPort,
-                "sessionID" : self.sessionID
-                })
-'''
-
 class PeerDiscovery(DatagramProtocol):
     """
     Broadcast the ip to all of the listeners on the channel

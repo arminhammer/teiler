@@ -13,26 +13,34 @@ qt4reactor.install()
 from twisted.python import log
 from twisted.internet import reactor
 from filereceiver import FileReceiverFactory
+
+from filetransfer import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import TeilerPeer, TeilerPeerList
 from session import Session
         
 # Class to maintain the state of the program
 class TeilerConfig():
-    def __init__(self):
-        self.address = utils.getLiveInterface()
-        self.sessionID = utils.generateSessionID()
-        self.name = "name@%s" % self.address
-        self.peerList = TeilerPeerList()
-        self.messages = []
-        self.multiCastAddress = '230.0.0.30'
-        self.multiCastPort = 8005
-        self.tcpPort = 9989
-        self.downloadPath = "/home/armin/teilerdown"
-        ''' Sessions currently sending, full Session objects'''
-        self.sessions = {}
-        ''' Sessions currently downloading, only the Session IDs '''
-        self.dlSessions = set()
+    """ Class to hold on to all instance variables used for state. 
+    """
+    def __init__(self, 
+                 address, 
+                 tcpPort,
+                 sessionID,
+                 name,
+                 peerList,
+                 multiCastAddress,
+                 multiCastPort,
+                 downloadPath):
+        self.address = address # this is the local IP
+        # port for file receiver to listen on 
+        self.tcpPort = tcpPort
+        self.sessionID = sessionID
+        self.name = name
+        self.peerList = peerList
+        self.multiCastAddress = multiCastAddress
+        self.multiCastPort = multiCastPort
+        self.downloadPath = downloadPath
         
     def notifySession(self, sessionID, message):
         log.msg("Printing sessions:")
@@ -48,16 +56,21 @@ class TeilerConfig():
 
 # Class for the GUI
 class TeilerWindow(QWidget):
-
-    def __init__(self, teiler):
+    """The main front end for the application."""
+    def __init__(self, peerList):
         # Initialize the object as a QWidget and
         # set its title and minimum width
+
         QWidget.__init__(self)
-        self.teiler = teiler
+
+        self.peerList = peerList
         self.setWindowTitle('BlastShare')
         self.setMinimumSize(240, 480)
         
-        self.connect(self.teiler.peerList, SIGNAL("dropped"), self.sendFileToPeers)
+
+        # connects the signals!
+        self.connect(self.peerList, 
+                     SIGNAL("dropped"), self.sendFileToPeers)
 
         shareFilesAction = QAction(QIcon('exit.png'), '&Share File(s)', self)
         shareFilesAction.setShortcut('Ctrl+O')
@@ -92,7 +105,7 @@ class TeilerWindow(QWidget):
         statusBar.showMessage('Ready')
         
         layout.addWidget(menubar)
-        layout.addWidget(self.teiler.peerList)
+        layout.addWidget(self.peerList)
         layout.addWidget(statusBar)
         # self.questionMessage("Borscht", "Flarb")
         
@@ -135,6 +148,11 @@ def quitApp():
     reactor.stop()
     qApp.quit()
 
+def download_path_exists():
+    downloadPath = os.path.join(os.path.expanduser("~"), "blaster")
+    if os.path.exists(downloadPath) == False:
+        os.mkdir(downloadPath)
+
 def main():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser(description="Exchange files!")
@@ -148,18 +166,43 @@ def main():
                             PeerDiscovery(teiler),
                             listenMultiple=True)
     log.msg("Initiating Peer Discovery")
+    config = TeilerConfig(utils.getLiveInterface(), #ip
+                          9998, #tcp port
+                          utils.generateSessionID(),
+                          utils.getUsername(),
+                          TeilerPeerList(),
+                          #udp connection information
+                          '230.0.0.30',
+                          8005,
+                          os.path.join(os.path.expanduser("~"), "blaster"))
+    
+    reactor.listenMulticast(config.multiCastPort, 
+                            PeerDiscovery(
+                                reactor,
+                                config.peerList,
+                                config.name,
+                                config.multiCastAddress,
+                                config.multiCastPort,
+                                config.address,
+                                config.tcpPort),
+                            listenMultiple=True)
+    
+    fileReceiver = FileReceiverFactory(config)
+    reactor.listenTCP(config.tcpPort, fileReceiver)
     
     app = TeilerWindow(teiler)
     # Initialize file transfer service
     fileReceiver = FileReceiverFactory(teiler, app)
     reactor.listenTCP(teiler.tcpPort, fileReceiver)
     log.msg("Starting file listener on {0}".format(teiler.tcpPort))
+    log.msg("Starting file listener on ", config.tcpPort)
     
-    # qt4reactor requires runReturn() in order to work
     reactor.runReturn()
     
     # Create an instance of the application window and run it
     
+        
+    app = TeilerWindow(config.peerList)
     app.run()
 
 if __name__ == '__main__':

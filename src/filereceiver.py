@@ -4,7 +4,8 @@ from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
 import session
-from session import Message, Session
+from session import Session
+from message import Message
 from twisted.internet.defer import Deferred
 from twisted.python import log
 from twisted.internet import reactor

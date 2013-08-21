@@ -10,6 +10,7 @@ from twisted.internet import reactor
 from twisted.python import log
 from filesender import FileSenderClientFactory
 import utils
+from message import Message
 from sessionmessageprotocol import SessionMessageFactory
 
 beginMsg = "BEGIN"
@@ -22,6 +23,7 @@ endFileMsg = "EOF"
 endMsg = "EOT"
 resendMsg = "RESEND"
 
+'''
 class Message(object):
     """mesage to be sent across the wire"""
     def __init__(self, command, sessionID="0000"):
@@ -33,6 +35,7 @@ class Message(object):
     
     def serialize(self):
         return json.dumps(self.__dict__)
+'''
 
 class Session(object):
     

@@ -180,6 +180,7 @@ def main():
     reactor.listenMulticast(config.multiCastPort, 
                             PeerDiscovery(
                                 reactor,
+                                config.sessionID,
                                 config.peerList,
                                 config.name,
                                 config.multiCastAddress,

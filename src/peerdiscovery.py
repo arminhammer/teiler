@@ -18,7 +18,6 @@ from twisted.internet.protocol import DatagramProtocol
 from peerlist import TeilerPeer
 from message import Message
 
-connectMsg = "CONNECT"
 heartbeatMsg = "HEARTBEAT"
 exitMsg = "EXIT"
 
@@ -33,6 +32,7 @@ class PeerDiscovery(DatagramProtocol):
     """
     def __init__(self, 
                  reactor,
+                 sessionID,
                  peers,
                  name, 
                  multiCastAddress, 
@@ -44,7 +44,7 @@ class PeerDiscovery(DatagramProtocol):
         of the protocol running on the same network.
         """
         self.peers = peers # your list needs to implement append
-        self.id = makeId(name, tcpAddress, tcpPort)
+        self.sessionID = sessionID
         self.reactor = reactor
         self.name = name
         self.multiCastAddress = multiCastAddress
@@ -53,59 +53,30 @@ class PeerDiscovery(DatagramProtocol):
         self.tcpPort = tcpPort
 
     def sendMessage(self, message):
-        self.transport.write(message, 
+        self.transport.write(message.serialize() + '\r\n', 
                              (self.multiCastAddress, self.multiCastPort))
 
     def startProtocol(self):
-        self.transport.setTTL(5)
-        self.transport.joinGroup(self.teiler.multiCastAddress)
-        message = Message(connectMsg, self.teiler.sessionID)
-        message.name = self.teiler.name
-        message.address = self.teiler.address
-        message.tcpPort = self.teiler.tcpPort
-        
-        self.transport.write(message.serialize() + '\r\n', (self.teiler.multiCastAddress, 
-                                       self.teiler.multiCastPort))
-        log.msg("Sent {0} message: {1}".format(connectMsg, message))      
-        reactor.callLater(10.0, self.sendHeartBeat)
+        self.transport.setTTL(5)   
         self.transport.joinGroup(self.multiCastAddress)
         self.loop = task.LoopingCall(self.sendHeartBeat)
         self.loop.start(5)
 
     def sendHeartBeat(self):
-        message = Message(heartbeatMsg, self.teiler.sessionID)
-        message.name = self.teiler.name
-        message.address = self.teiler.address
-        message.tcpPort = self.teiler.tcpPort
-
-        self.transport.write(message.serialize() + '\r\n', 
-                             (self.teiler.multiCastAddress, 
-                              self.teiler.multiCastPort))
-        log.msg("Sent {0} message: {1}".format(heartbeatMsg, message))
-        reactor.callLater(5.0, self.sendHeartBeat)
         """Sends message alerting other peers to your presence."""
-        message = Message(heartbeatMsg, 
-                          self.name, 
-                          self.tcpAddress, 
-                          self.tcpPort, 
-                          ).serialize()
+        message = Message(heartbeatMsg, self.sessionID)
+        message.name = self.name
+        message.address = self.tcpAddress
+        message.tcpPort = self.tcpPort
         self.sendMessage(message)
-        log.msg("Sent " + message)
-
-    def stopProtocol(self):
-        message = Message(exitMsg, self.teiler.sessionID)
-        message.name = self.teiler.name
-        message.address = self.teiler.address
-        message.tcpPort = self.teiler.tcpPort
+        log.msg("Sent " + str(message))
         
-        self.transport.write(message.serialize() + '\r\n', (self.teiler.multiCastAddress, self.teiler.multiCastPort))
-        log.msg("Sent {0} message: {1}".format(exitMsg, message))
+    def stopProtocol(self):
         """Gracefully tell peers to remove you."""
-        message = Message(exitMsg, 
-                          self.name, 
-                          self.tcpAddress, 
-                          self.tcpPort, 
-                          ).serialize()
+        message = Message(exitMsg, self.sessionID)
+        message.name = self.name
+        message.address = self.teiler.tcpAddress
+        message.tcpPort = self.teiler.tcpPort
         self.sendMessage(message)
         self.loop.stop()
         log.msg("Exit " + message)
@@ -121,8 +92,6 @@ class PeerDiscovery(DatagramProtocol):
         peerAddress = msg['address']
         peerPort = msg['tcpPort']
         peerMsg = msg['message']
-        peerId = makeId(peerName, peerAddress, peerPort)
-
         peerPort = message['tcpPort']
         peerID = message['sessionID']
         log.msg("Peer: Address: {0} Name: {1}".format(peerAddress, peerName))

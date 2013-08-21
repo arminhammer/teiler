@@ -14,6 +14,13 @@ class TeilerPeer(QListWidgetItem):
         self.setText("\n  {0}\n  {1}:{2}\n".format(self.name, self.address, self.port))
         self.setSelected(False)
         
+    def __str__(self):
+        return self.id
+
+    def __eq__(self, other):
+        """needed to be able to remove items from peers form the list"""
+        return self.id == other.id
+        
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
             event.accept()

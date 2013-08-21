@@ -40,6 +40,9 @@ class TeilerConfig():
         self.multiCastAddress = multiCastAddress
         self.multiCastPort = multiCastPort
         self.downloadPath = downloadPath
+        self.sessions = {}
+        ''' Sessions currently downloading, only the Session IDs '''
+        self.dlSessions = set()
         
     def notifySession(self, sessionID, message):
         log.msg("Printing sessions:")
@@ -176,7 +179,7 @@ def main():
                           #udp connection information
                           '230.0.0.30',
                           8005,
-                          os.path.join(os.path.expanduser("~"), "blaster"))
+                          os.path.join(os.path.expanduser("~"), "teiler"))
     
     reactor.listenMulticast(config.multiCastPort, 
                             PeerDiscovery(
@@ -190,7 +193,7 @@ def main():
                                 config.tcpPort),
                             listenMultiple=True)
 
-    app = TeilerWindow(config.peerList)
+    app = TeilerWindow(config)
     
     fileReceiver = FileReceiverFactory(config, app)
     reactor.listenTCP(config.tcpPort, fileReceiver)

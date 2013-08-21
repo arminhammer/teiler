@@ -129,7 +129,6 @@ class TeilerWindow(QWidget):
         
     def run(self):
         self.show()
-        # self.displayAcceptFileDialog("Barf")
         qt_app.exec_()
 
 def quitApp():
@@ -159,7 +158,6 @@ def main():
     # qt4reactor requires runReturn() in order to work
     reactor.runReturn()
     
-    # filetransfer.sendFile("/home/armin/tempzip.zip",port=teiler.tcpPort,address=teiler.address)
     # Create an instance of the application window and run it
     
     app.run()

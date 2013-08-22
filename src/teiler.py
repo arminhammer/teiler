@@ -43,7 +43,7 @@ class Window(QWidget):
         preferencesAction = QAction(QIcon('exit.png'), '&Preferences', self)
         preferencesAction.setShortcut('Ctrl+P')
         preferencesAction.setStatusTip('Preferences')
-        preferencesAction.triggered.connect(quitApp)
+        preferencesAction.triggered.connect(self.editPreferences)
 
         exitAction = QAction(QIcon('exit.png'), '&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -89,6 +89,11 @@ class Window(QWidget):
         log.msg("Showing filename")
         dialog = AcceptFileDialog(fileName)
         dialog.exec_()
+        
+    def editPreferences( self ):
+        """ Launches the edit preferences dialog for this window. """
+        prefs = PreferencesDialog(self)
+        prefs.exec_()
     
     def slotFile(self):
         filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
@@ -96,6 +101,11 @@ class Window(QWidget):
     def run(self):
         self.show()
         qt_app.exec_()
+
+class PreferencesDialog(QDialog):
+    def __init__( self, parent ):
+        super(PreferencesDialog, self).__init__(parent)
+        self.setWindowTitle('Preferences')
 
 def quitApp():
     reactor.stop()

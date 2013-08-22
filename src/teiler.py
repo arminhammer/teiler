@@ -2,9 +2,13 @@ import argparse
 import os
 import sys
 import utils
-import qt4reactor
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+import qt4reactor
+qt_app = QApplication(sys.argv)
+qt4reactor.install()
+
 from twisted.python import log
 from twisted.internet import reactor
 from filereceiver import FileReceiverFactory
@@ -12,9 +16,6 @@ from peerdiscovery import PeerDiscovery
 from peerlist import TeilerPeer, TeilerPeerList
 from session import Session
 from config import Config
-
-qt_app = QApplication(sys.argv)
-qt4reactor.install()
 
 # Class for the GUI
 class Window(QWidget):

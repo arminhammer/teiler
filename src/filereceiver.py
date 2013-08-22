@@ -59,14 +59,6 @@ class FileReceiverProtocol(LineReceiver):
             self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
             log.msg("Saving file to {0}".format(self.outFile)) 
             self.setRawMode()
-        #elif message['command'] == session.endFileMsg:
-        #    sessionID = message['sessionID']
-        #    ''' Should check to see that sessions match '''
-        #    if sessionID != self.sessionID:
-        #        log.msg("Sessions do not match!")
-        #    else:
-        #        receivedMessage = Message(session.receivedMsg)
-        #        self.teiler.notifySession(sessionID, receivedMessage.serialize())
         elif message['command'] == session.endMsg:
             msgSession = message['sessionID']
             if msgSession in self.teiler.dlSessions:
@@ -123,8 +115,6 @@ class FileReceiverProtocol(LineReceiver):
                 resendMessage = Message(session.resendMsg)
                 self.teiler.notifySession(self.sessionID, resendMessage.serialize())
             
-                
-                
 def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """
     return (os.system('file 2> /dev/null') != 0 and \

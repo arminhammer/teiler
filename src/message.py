@@ -1,7 +1,7 @@
 import json
 
 class Message(object):
-    """mesage to be sent across the wire"""
+    """message to be sent across the wire"""
     def __init__(self, command, sessionID="0000"):
         self.command = command
         self.sessionID = sessionID

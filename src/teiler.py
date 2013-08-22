@@ -95,10 +95,6 @@ class TeilerWindow(QWidget):
         fileMenu.addAction(preferencesAction)
         fileMenu.addAction(exitAction)
 
-        # Create the QVBoxLayout that lays out the whole form
-        #self.teiler.peerList.setAcceptDrops(True)
-        #self.teiler.peerList.setDragEnabled(True)
-
         layout = QVBoxLayout()
         layout.setContentsMargins(QMargins(0, 0, 0, 0))
         self.setLayout(layout)
@@ -113,8 +109,6 @@ class TeilerWindow(QWidget):
         
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
-        #selectedPeer = self.teiler.peerList.currentItem()
-        #log.msg("Selected Peer is {0}".format(selectedPeer.name))
         for peer in self.peerList.iterAllItems():
             session = Session(str(fileName), self.config, peer.address, peer.port)
             self.config.sessions[str(session.id)] = session
@@ -162,14 +156,6 @@ def main():
     
     # Initialize peer discovery using UDP multicast
     multiCastPort = 8006
-    '''
-    teiler = TeilerConfig()
-    teiler.multiCastPort = multiCastPort
-    reactor.listenMulticast(multiCastPort,
-                            PeerDiscovery(teiler),
-                            listenMultiple=True)
-    log.msg("Initiating Peer Discovery")
-    '''
     
     config = TeilerConfig(utils.getLiveInterface(), #ip
                           9998, #tcp port

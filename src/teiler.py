@@ -2,62 +2,22 @@ import argparse
 import os
 import sys
 import utils
+import qt4reactor
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
- 
-import qt4reactor
+from twisted.python import log
+from twisted.internet import reactor
+from filereceiver import FileReceiverFactory
+from peerdiscovery import PeerDiscovery
+from peerlist import TeilerPeer, TeilerPeerList
+from session import Session
+from config import Config
 
 qt_app = QApplication(sys.argv)
 qt4reactor.install()
 
-from twisted.python import log
-from twisted.internet import reactor
-from filereceiver import FileReceiverFactory
-
-from peerdiscovery import PeerDiscovery
-from peerlist import TeilerPeer, TeilerPeerList
-from session import Session
-        
-# Class to maintain the state of the program
-class TeilerConfig():
-    """ Class to hold on to all instance variables used for state. 
-    """
-    def __init__(self, 
-                 address, 
-                 tcpPort,
-                 sessionID,
-                 name,
-                 peerList,
-                 multiCastAddress,
-                 multiCastPort,
-                 downloadPath):
-        self.address = address # this is the local IP
-        # port for file receiver to listen on 
-        self.tcpPort = tcpPort
-        self.sessionID = sessionID
-        self.name = name
-        self.peerList = peerList
-        self.multiCastAddress = multiCastAddress
-        self.multiCastPort = multiCastPort
-        self.downloadPath = downloadPath
-        self.sessions = {}
-        ''' Sessions currently downloading, only the Session IDs '''
-        self.dlSessions = set()
-        
-    def notifySession(self, sessionID, message):
-        log.msg("Printing sessions:")
-        for k,v in self.sessions.iteritems():
-            log.msg("Key: {0}, Value: {1}".format(k, v))
-        if not self.sessions.has_key(sessionID):
-            log.msg("Session key cannot be found!")
-        else:
-            self.sessions[sessionID].processResponse(message)
-            
-    def closeSession(self, session):
-        del self.sessions[session.id]
-
 # Class for the GUI
-class TeilerWindow(QWidget):
+class Window(QWidget):
     """The main front end for the application."""
     def __init__(self, config):
         # Initialize the object as a QWidget and
@@ -105,7 +65,6 @@ class TeilerWindow(QWidget):
         layout.addWidget(menubar)
         layout.addWidget(self.peerList)
         layout.addWidget(statusBar)
-        # self.questionMessage("Borscht", "Flarb")
         
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
@@ -120,13 +79,10 @@ class TeilerWindow(QWidget):
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
         if reply == QMessageBox.Yes:
             return "yes"
-            # self.questionLabel.setText("Yes")
         elif reply == QMessageBox.No:
             return "no"
-            # self.questionLabel.setText("No")
         else:
             return "cancel"
-            # self.questionLabel.setText("Cancel")
 
     def displayAcceptFileDialog(self, fileName):
         log.msg("Showing filename")
@@ -157,7 +113,7 @@ def main():
     # Initialize peer discovery using UDP multicast
     multiCastPort = 8006
     
-    config = TeilerConfig(utils.getLiveInterface(), #ip
+    config = Config(utils.getLiveInterface(), #ip
                           9998, #tcp port
                           utils.generateSessionID(),
                           utils.getUsername(),
@@ -179,7 +135,7 @@ def main():
                                 config.tcpPort),
                             listenMultiple=True)
 
-    app = TeilerWindow(config)
+    app = Window(config)
     
     fileReceiver = FileReceiverFactory(config, app)
     reactor.listenTCP(config.tcpPort, fileReceiver)

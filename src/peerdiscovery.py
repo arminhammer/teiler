@@ -15,7 +15,7 @@ import json
 from twisted.python import log
 from twisted.internet import task, reactor
 from twisted.internet.protocol import DatagramProtocol 
-from peerlist import TeilerPeer
+from peer import Peer
 from message import Message
 
 heartbeatMsg = "HEARTBEAT"
@@ -98,7 +98,7 @@ class PeerDiscovery(DatagramProtocol):
 
         log.msg("Does the list contain? {0}".format(self.peers.contains(peerID, peerAddress, peerPort)))    
         if not self.peers.contains(peerID, peerAddress, peerPort):
-            newPeer = TeilerPeer(peerID, peerName, peerAddress, peerPort)
+            newPeer = Peer(peerID, peerName, peerAddress, peerPort)
             self.peers.addItem(newPeer)
             log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             

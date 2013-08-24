@@ -13,7 +13,8 @@ from twisted.python import log
 from twisted.internet import reactor
 from filereceiver import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
-from peerlist import TeilerPeer, TeilerPeerList
+from peerlist import PeerList
+from peer import Peer
 from session import Session
 from config import Config
 
@@ -128,7 +129,7 @@ def main():
                           9998, #tcp port
                           utils.generateSessionID(),
                           utils.getUsername(),
-                          TeilerPeerList(),
+                          PeerList(),
                           #udp connection information
                           '230.0.0.30',
                           8005,

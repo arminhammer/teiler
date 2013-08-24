@@ -1,11 +1,13 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from peer import Peer
+import utils
 
 # Class that keeps track of the peers and displays them to the user
 class PeerList(QListWidget):
     
     def __init__(self, parent=None):
-        super(TeilerPeerList, self).__init__(parent)
+        super(PeerList, self).__init__(parent)
         self.setVisible(True)
         self.setAcceptDrops(True)
         #self.teiler.peerList.setDragEnabled(True)
@@ -13,7 +15,7 @@ class PeerList(QListWidget):
         
         ''' For testing '''
         id = utils.generateSessionID()
-        newPeer = TeilerPeer(id, "testHostName", "testHost", 9989)
+        newPeer = Peer(id, "testHostName", "testHost", 9989)
         self.addItem(newPeer)
     
     def contains(self, peerID, peerAddress, peerPort):

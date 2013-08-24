@@ -1,16 +1,18 @@
 import argparse
 import os
 import sys
-import utils
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import qt4reactor
-qt_app = QApplication(sys.argv)
+QT_APP = QApplication(sys.argv)
 qt4reactor.install()
 
 from twisted.python import log
 from twisted.internet import reactor
+
+import utils
 from filereceiver import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import PeerList
@@ -71,13 +73,15 @@ class Window(QWidget):
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
         for peer in self.peerList.iterAllItems():
-            session = Session(str(fileName), self.config, peer.address, peer.port)
+            session = Session(str(fileName), self.config, 
+                              peer.address, peer.port)
             self.config.sessions[str(session.id)] = session
             session.startTransfer()
 
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",
-                "Do you want to accept the {0} from {1}?".format(fileName, peerName),
+                "Do you want to accept the {0} from {1}?".format(fileName,
+                                                                 peerName),
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
         if reply == QMessageBox.Yes:
             return "yes"
@@ -85,11 +89,6 @@ class Window(QWidget):
             return "no"
         else:
             return "cancel"
-
-    def displayAcceptFileDialog(self, fileName):
-        log.msg("Showing filename")
-        dialog = AcceptFileDialog(fileName)
-        dialog.exec_()
         
     def editPreferences( self ):
         """ Launches the edit preferences dialog for this window. """
@@ -101,7 +100,7 @@ class Window(QWidget):
         
     def run(self):
         self.show()
-        qt_app.exec_()
+        QT_APP.exec_()
 
 class PreferencesDialog(QDialog):
     def __init__( self, parent ):

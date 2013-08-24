@@ -18,7 +18,11 @@ class Peer(QListWidgetItem):
 
     def __eq__(self, other):
         """needed to be able to remove items from peers form the list"""
-        return self.id == other.id
+        if self.id == other.id:
+            if self.address == other.address:
+                if self.port == other.port:
+                    return True
+        return False
         
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:

@@ -7,16 +7,19 @@ class SessionTestCase(unittest.TestCase):
         pass
     
     def test_str(self):
+        self.fail()
         ''' 
         return str(self.id)
          '''
     
     def test_startTransfer(self):
+        self.fail()
         '''
         self.sendBeginning()
         '''
          
     def test_processResponse(self):
+        self.fail()
         '''
         log.msg("Response received: {0}".format(msg))
         message = json.loads(msg)
@@ -33,6 +36,7 @@ class SessionTestCase(unittest.TestCase):
         '''
         
     def test_sendBeginning(self):
+        self.fail()
         '''
         beginMessage = Message(beginMsg, self.id)
         beginMessage.fileName = self.fileName
@@ -44,6 +48,7 @@ class SessionTestCase(unittest.TestCase):
         '''
         
     def test_sendEnd(self):
+        self.fail()
         '''
         endMessage = Message(endMsg, self.id)
         log.msg("Sending EOT")
@@ -54,6 +59,7 @@ class SessionTestCase(unittest.TestCase):
         '''
         
     def test_sendFile(self):
+        self.fail()
         '''
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
         f = FileSenderClientFactory(path, controller, self.id)
@@ -62,6 +68,7 @@ class SessionTestCase(unittest.TestCase):
         '''
         
     def test_startFileSend(self):
+        self.fail()
         '''
             log.msg("Calculating files...")
             self.transferQueue.put(self.fileName)
@@ -77,6 +84,7 @@ class SessionTestCase(unittest.TestCase):
        '''
         
     def test_processTransferQueue(self):
+        self.fail()
         '''
         remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))

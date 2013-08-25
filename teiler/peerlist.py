@@ -2,6 +2,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from peer import Peer
 import utils
+from abstractpeerlist import AbstractPeerList
 
 # Class that keeps track of the peers and displays them to the user
 class PeerList(QListWidget, AbstractPeerList):

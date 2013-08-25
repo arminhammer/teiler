@@ -3,7 +3,7 @@ from PyQt4.QtGui import *
 import utils
 
 # Class to represent a peer on the network and the gui
-class Peer(QListWidgetItem):
+class Peer(QListWidgetItem, AbstractPeer):
     def __init__(self, id, name, address, port):
         QListWidgetItem.__init__(self)
         self.id = id

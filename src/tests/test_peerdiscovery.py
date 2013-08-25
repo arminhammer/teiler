@@ -6,9 +6,24 @@ from zope.interface import implements
 from twisted.internet.interfaces import IMulticastTransport, IUDPTransport
 from twisted.trial import unittest
 from twisted.internet import task
+import utils
 
 # classes to test
-from ..peerdiscovery import Message, Peer, PeerDiscovery, heartbeatMsg, exitMsg, makeId
+from peerdiscovery import PeerDiscovery
+
+class FakePeerList(object):
+    
+    def init(self):
+        pass
+    
+    def contains(self):
+        pass
+    
+    def addItem(self):
+        pass
+    
+    def removeItem(self):
+        pass
 
 class FakeUdpTransport(object):
     """ Instead of connecting through the network, this transport 
@@ -42,7 +57,8 @@ class PeerDiscoveryTests(unittest.TestCase):
 
     def setUp(self):
         self.clock = task.Clock()
-        self.protocol = PeerDiscovery(self.clock, "test", "1.1.1.1", "9203", "1.1.1.1", "8000")
+        self.peers = FakePeerList()
+        self.protocol = PeerDiscovery(self.clock, utils.generateSessionID(), self.peers, "Test", "1.1.1.1", "8000", '192.168.1.100', 8899)
         self.tr = FakeUdpTransport()
         self.protocol.transport = self.tr
 

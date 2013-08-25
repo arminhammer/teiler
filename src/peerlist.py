@@ -4,7 +4,7 @@ from peer import Peer
 import utils
 
 # Class that keeps track of the peers and displays them to the user
-class PeerList(QListWidget):
+class PeerList(QListWidget, AbstractPeerList):
     
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
@@ -14,9 +14,11 @@ class PeerList(QListWidget):
         self.setViewMode(QListView.ListMode)
         
         ''' For testing '''
+        '''
         id = utils.generateSessionID()
         newPeer = Peer(id, "testHostName", "testHost", 9989)
         self.addItem(newPeer)
+        '''
     
     def contains(self, peerID, peerAddress, peerPort):
         for i in range(self.count()):

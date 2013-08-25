@@ -32,8 +32,10 @@ class Config():
             log.msg("Key: {0}, Value: {1}".format(k, v))
         if not self.sessions.has_key(sessionID):
             log.msg("Session key cannot be found!")
+            return False
         else:
             self.sessions[sessionID].processResponse(message)
+            return True
             
     def closeSession(self, session):
         del self.sessions[session.id]

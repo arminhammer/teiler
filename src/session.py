@@ -25,13 +25,14 @@ resendMsg = "RESEND"
 
 class Session(object):
     
-    def __init__(self, fileName, teiler, address, port):
+    def __init__(self, fileName, config, address, port):
         self.id = utils.generateSessionID()
         self.transferQueue = Queue.Queue()
         self.address = address
         self.port = port
         self.fileName = fileName
         self.status = 0
+        self.config = config
        
     def __str__(self):
         return str(self.id)
@@ -68,7 +69,7 @@ class Session(object):
         f = SessionMessageFactory(endMessage)
         self.status = "finished"
         reactor.connectTCP(self.address, self.port, f)
-        teiler.closeSession(self)
+        self.config.closeSession(self)
     
     def sendFile(self, path, address='localhost', port=1234,):
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})

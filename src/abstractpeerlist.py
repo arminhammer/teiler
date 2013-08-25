@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 class AbstractPeerList:
     
-    __metaclass__ = ABCMeta
+    #__metaclass__ = ABCMeta
     
     @abstractmethod
     def contains(self, peerID, peerAddress, peerPort):

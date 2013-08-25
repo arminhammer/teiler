@@ -7,11 +7,12 @@ from twisted.internet.interfaces import IMulticastTransport, IUDPTransport
 from twisted.trial import unittest
 from twisted.internet import task
 import utils
+from abstractpeerlist import AbstractPeerList
 
 # classes to test
 from peerdiscovery import PeerDiscovery
 
-class FakePeerList(object):
+class FakePeerList(AbstractPeerList):
     
     def init(self):
         pass

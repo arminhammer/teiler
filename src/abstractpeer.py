@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 class AbstractPeer:
     
-    __metaclass__ = ABCMeta
+    #__metaclass__ = ABCMeta
     
     @abstractmethod
     def __init__(self, id, name, address, port):

@@ -1,5 +1,13 @@
 #!/usr/bin/env python
+import codecs 
 
+try: 
+    codecs.lookup('mbcs') 
+except LookupError: 
+    ascii = codecs.lookup('ascii') 
+    func = lambda name, enc=ascii: {True: enc}.get(name=='mbcs') 
+    codecs.register(func)
+    
 from distutils.core import setup
 
 setup(name = "teiler",

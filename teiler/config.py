@@ -28,13 +28,13 @@ class Config():
         
     def notifySession(self, sessionID, message):
         log.msg("Printing sessions:")
-        for k,v in self.sessions.iteritems():
+        for k,v in self.dlSessions.iteritems():
             log.msg("Key: {0}, Value: {1}".format(k, v))
-        if not self.sessions.has_key(sessionID):
+        if not self.dlSessions.has_key(sessionID):
             log.msg("Session key cannot be found!")
             return False
         else:
-            self.sessions[sessionID].processResponse(message)
+            self.dlSessions[sessionID].processResponse(message)
             return True
             
     def closeSession(self, session):

@@ -60,7 +60,7 @@ class PeerDiscovery(DatagramProtocol):
         self.transport.setTTL(5)   
         self.transport.joinGroup(self.multiCastAddress)
         self.loop = task.LoopingCall(self.sendHeartBeat)
-        self.loop.start(5)
+        self.loop.start(10)
 
     def sendHeartBeat(self):
         """Sends message alerting other peers to your presence."""

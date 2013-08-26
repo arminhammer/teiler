@@ -55,14 +55,22 @@ class FileReceiverProtocol(LineReceiver):
             self.fileName = message['fileName']
             self.fileSize = message['fileSize']
             self.sessionID = message['sessionID']
-            log.msg("Vals are {0} and {1}".format(self.fileName, self.fileSize))
-            self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
-            log.msg("Saving file to {0}".format(self.outFile)) 
-            self.setRawMode()
+            log.msg("Vals are filename: {0}, filesize: {1}, sessionID: {2}".format(self.fileName, self.fileSize, self.sessionID))
+            if message['sessionID'] in self.teiler.dlSessions:
+                self.outFile = open(self.teiler.downloadPath + self.fileName, 'wb+')
+                log.msg("Saving file to {0}".format(self.outFile)) 
+                self.setRawMode()
+            else:
+                log.msg("File Message was not in a proper session!")
+                self.transport.loseConnection()
         elif message['command'] == session.endMsg:
             msgSession = message['sessionID']
             if msgSession in self.teiler.dlSessions:
                 log.msg("EOT message received!")
+                del self.teiler.dlSessions[msgSession]
+                self.transport.loseConnection()
+            else:
+                log.msg("EOT Message was not in a proper session!")
                 self.transport.loseConnection()
         else:
             log.msg("Command not recognized.")

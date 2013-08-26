@@ -26,15 +26,17 @@ class Config():
         ''' Sessions currently downloading, only the Session IDs '''
         self.dlSessions = set()
         
-    def notifySession(self, sessionID, message):
+    def notifySession(self, sessionID, message, address, port):
         log.msg("Printing sessions:")
-        for k,v in self.dlSessions.iteritems():
-            log.msg("Key: {0}, Value: {1}".format(k, v))
-        if not self.dlSessions.has_key(sessionID):
+        for session in self.dlSessions:
+            log.msg("{0}".format(session))
+        if sessionID not in self.dlSessions:
             log.msg("Session key cannot be found!")
             return False
         else:
-            self.dlSessions[sessionID].processResponse(message)
+            receivedMessage = Message(session.receivedMsg)
+            f = SessionMessageFactory(self, receivedMessage)
+            reactor.connectTCP(address, port, f)
             return True
             
     def closeSession(self, session):

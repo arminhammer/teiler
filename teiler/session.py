@@ -38,7 +38,13 @@ class Session(object):
         return str(self.id)
     
     def startTransfer(self):
-        self.sendBeginning()
+        beginMessage = Message(beginMsg, self.id)
+        beginMessage.fileName = self.fileName
+        log.msg("Sending BEGIN")
+        log.msg("Message is {0}".format(beginMsg))
+        f = SessionMessageFactory(self, beginMessage)
+        self.status = 1
+        reactor.connectTCP(self.address, self.port, f)
          
     def processResponse(self, msg):
         log.msg("Response received: {0}".format(msg))
@@ -53,15 +59,6 @@ class Session(object):
             reactor.callLater(0, self.processTransferQueue)
         else:
             log.msg("NOT RECOGNIZED!")  
-    
-    def sendBeginning(self):
-        beginMessage = Message(beginMsg, self.id)
-        beginMessage.fileName = self.fileName
-        log.msg("Sending BEGIN")
-        log.msg("Message is {0}".format(beginMsg))
-        f = SessionMessageFactory(self, beginMessage)
-        self.status = 1
-        reactor.connectTCP(self.address, self.port, f)
         
     def sendEnd(self):
         endMessage = Message(endMsg, self.id)
@@ -106,4 +103,7 @@ class Session(object):
                 f = SessionMessageFactory(self, dirMessage)
                 reactor.connectTCP(self.address, self.port, f)
             else:
-                reactor.callLater(0, self.sendFile, path, self.address, self.port)
+                log.msg("Sending file...")
+                result = self.sendFile(path, self.address, self.port)
+                log.msg("Result was {0}".format(result))
+                # reactor.callLater(0, self.sendFile, path, self.address, self.port)

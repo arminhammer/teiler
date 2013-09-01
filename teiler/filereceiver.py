@@ -23,6 +23,8 @@ class FileReceiverProtocol(LineReceiver):
         self.teilerWindow = teilerWindow
         self.sessionID = 0
         self.success = False
+        self.peerAddress = ""
+        self.peerPort = 0
         
     def lineReceived(self, line):
         """ """
@@ -81,7 +83,8 @@ class FileReceiverProtocol(LineReceiver):
         log.msg("Creating dir {0}".format(dirName))
         
     def sendReceivedMessage(self):
-        pass
+        receivedMessage = Message(session.receivedMsg)
+        self.transport.write(receivedMessage.serialize() + '\r\n')
         
     def rawDataReceived(self, data):
         """ """
@@ -95,6 +98,7 @@ class FileReceiverProtocol(LineReceiver):
         elif self.buffer == self.fileSize:
             self.outFile.write(data)
             self.success = True
+            self.sendReceivedMessage()
         else:
             left = self.buffer - self.fileSize
             log.msg("{0} bytes left, {1} type".format(left, data))
@@ -104,6 +108,8 @@ class FileReceiverProtocol(LineReceiver):
         basic.LineReceiver.connectionMade(self)
         print 'a connection was made'
         print ' * ', self.transport.getPeer()
+        self.peerAddress = self.transport.getPeer().host
+        self.peerPort = self.transport.getPeer().port
 
     def connectionLost(self, reason):
         log.msg("Connection on receiver side finished.")
@@ -116,13 +122,15 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too much'
                 if self.remain > 0:
                     reason = ' .. file moved too little'
+            '''
             if self.success:
                 receivedMessage = Message(session.receivedMsg)
-                self.teiler.notifySession(self.sessionID, receivedMessage.serialize())
+                self.teiler.notifySession(self.sessionID, receivedMessage.serialize(), self.peerAddress, self.peerPort)
             else:
                 resendMessage = Message(session.resendMsg)
-                self.teiler.notifySession(self.sessionID, resendMessage.serialize())
-            
+                self.teiler.notifySession(self.sessionID, resendMessage.serialize(), self.peerAddress, self.peerPort)
+            '''
+                    
 def fileinfo(self, fname):
     """ when "file" tool is available, return it's output on "fname" """
     return (os.system('file 2> /dev/null') != 0 and \

@@ -1,6 +1,7 @@
 from binascii import crc32
 import os, json
 
+from twisted.python import log
 from twisted.protocols import basic
 from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ClientFactory
@@ -49,12 +50,24 @@ class FileSenderClient(basic.LineReceiver):
 
         return data
 
+    def lineReceived(self, line):
+        message = json.loads(line)
+        log.msg("Sender received message {0}".format(message))
+        if message['command'] == session.receivedMsg:
+            if self.completed:
+                log.msg("Looks like the file went through.  Closing...")
+            else:
+                log.msg("Message from receiver was sent before the file \
+                transfer was completed")
+            self.transport.loseConnection()
+
     def cbTransferCompleted(self, lastsent):
         """ """
         self.completed = True
-        eofMsg = session.Message(session.endFileMsg)
-        eofMsg.sessionID = self.sessionID
-        self.transport.loseConnection()
+        self.setLineMode()
+        # eofMsg = session.Message(session.endFileMsg)
+        # eofMsg.sessionID = self.sessionID
+        # self.transport.loseConnection()
 
     def connectionMade(self):
         """ """
@@ -76,7 +89,7 @@ class FileSenderClient(basic.LineReceiver):
         from twisted.internet.error import ConnectionDone
         basic.LineReceiver.connectionLost(self, reason)
         print ' - connectionLost\n  * ', reason.getErrorMessage()
-        print ' * finished with',self.path
+        print ' * finished with', self.path
         self.infile.close()
         if self.completed:
             self.controller.completed.callback(self.result)

@@ -69,7 +69,7 @@ class FileReceiverProtocol(LineReceiver):
             msgSession = message['sessionID']
             if msgSession in self.teiler.dlSessions:
                 log.msg("EOT message received!")
-                del self.teiler.dlSessions[msgSession]
+                self.teiler.dlSessions.remove(msgSession)
                 self.transport.loseConnection()
             else:
                 log.msg("EOT Message was not in a proper session!")

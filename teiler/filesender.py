@@ -67,7 +67,7 @@ class FileSenderClient(basic.LineReceiver):
         self.setLineMode()
         # eofMsg = session.Message(session.endFileMsg)
         # eofMsg.sessionID = self.sessionID
-        # self.transport.loseConnection()
+        self.transport.loseConnection()
 
     def connectionMade(self):
         """ """
@@ -84,7 +84,9 @@ class FileSenderClient(basic.LineReceiver):
 
     def connectionLost(self, reason):
         """
-            NOTE: reason is a twisted.python.failure.Failure instance
+            NOTE: reason is a twisted.python.failure.Failure inst
+            
+            ance
         """
         from twisted.internet.error import ConnectionDone
         basic.LineReceiver.connectionLost(self, reason)
@@ -92,8 +94,10 @@ class FileSenderClient(basic.LineReceiver):
         print ' * finished with', self.path
         self.infile.close()
         if self.completed:
+            log.msg("Yada Yada success!")
             self.controller.completed.callback(self.result)
         else:
+            log.msg("Yada Yada failure!")
             self.controller.completed.errback(reason)
 
 class FileSenderClientFactory(ClientFactory):

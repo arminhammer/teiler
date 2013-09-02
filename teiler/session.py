@@ -72,8 +72,26 @@ class Session(object):
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
         f = FileSenderClientFactory(path, controller, self.id)
         reactor.connectTCP(address, port, f)
+        log.msg("Completed is " + str(controller.completed))
         return controller.completed
     
+    def _sendDir(self, path):
+        dirMessage = Message(dirMsg, self.id)
+        dirMessage.dirName = "{0}".format(path)
+        f = SessionMessageFactory(self, dirMessage)
+        reactor.connectTCP(self.address, self.port, f)
+        
+    def sendDirectory(self, path):
+        d = Deferred()
+        reactor.callLater(0, self._sendDir, path)
+        return d
+    
+    def success(self):
+        print "This was success!"
+        
+    def failure(self):
+        print "This was failure!"
+        
     def startFileSend(self):
             log.msg("Calculating files...")
             self.transferQueue.put(self.fileName)
@@ -98,12 +116,14 @@ class Session(object):
             path = self.transferQueue.get()
             log.msg("Sending {0}".format(path))
             if os.path.isdir(path):
-                dirMessage = Message(dirMsg, self.id)
-                dirMessage.dirName = "{0}".format(path)
-                f = SessionMessageFactory(self, dirMessage)
-                reactor.connectTCP(self.address, self.port, f)
+                d = self.sendDirectory(path)
+                d.addCallback(self.success)
+                d.addErrback(self.failure)
             else:
-                log.msg("Sending file...")
-                result = self.sendFile(path, self.address, self.port)
-                log.msg("Result was {0}".format(result))
+                # log.msg("Sending file...")
+                d = self.sendFile(path, self.address, self.port)
+                log.msg("D is " + str(d))
+                d.addCallback(self.processTransferQueue)
+                d.addErrback(self.failure)
+                log.msg("Result was {0}")
                 # reactor.callLater(0, self.sendFile, path, self.address, self.port)

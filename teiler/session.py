@@ -1,10 +1,5 @@
-from binascii import crc32
 import os, json
 import Queue
-from twisted.protocols import basic
-from twisted.internet.protocol import ServerFactory
-from twisted.internet.protocol import ClientFactory
-from twisted.protocols.basic import FileSender, LineReceiver
 from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 from twisted.python import log

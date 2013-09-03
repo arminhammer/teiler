@@ -1,5 +1,6 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import SIGNAL
+from PyQt4.QtGui import QWidget, QGridLayout, QLabel, QLineEdit, QPushButton
+from PyQt4.QtGui import QMessageBox
 from twisted.python import log
 
 class Preferences(QWidget):
@@ -20,23 +21,7 @@ class Preferences(QWidget):
        grid.addWidget(self.tcpPort, 2, 0)
        grid.addWidget(self.tcpPortText, 2, 1)
        
-       
-       # layout.addWidget(self.hostname)
-
-       # layout.addWidget(self.hostnameText)
-
-       '''
-       layout1 = QHBoxLayout()
-       layout1.addWidget(self.tcpPort)
-
-       layout1.addWidget(self.tcpPortText)
-    
-
-       mainLayout.addLayout(layout)
-       mainLayout.addLayout(layout1)
-        '''
        # --The Button------------------------------#
-       layout = QHBoxLayout()
        button = QPushButton("OK")  # string or icon
        self.connect(button, SIGNAL("clicked()"), self.saveAndClose)
        grid.addWidget(button, 3, 0)

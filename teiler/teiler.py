@@ -33,6 +33,7 @@ class Window(QWidget):
         self.peerList = config.peerList
         self.setWindowTitle('BlastShare')
         self.setMinimumSize(240, 480)
+        self.prefw = None
         
         # connects the signals!
         self.connect(self.peerList,
@@ -98,8 +99,8 @@ class Window(QWidget):
         
     def editPreferences(self):
         """ Launches the edit preferences dialog for this window. """
-        prefs = PreferencesDialog(self)
-        prefs.exec_()
+        self.prefw = PreferencesDialog(self, 'Preferences')
+        self.prefw.show()
     
     def slotFile(self):
         filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
@@ -108,11 +109,37 @@ class Window(QWidget):
         self.show()
         QT_APP.exec_()
 
-class PreferencesDialog(QDialog):
-    def __init__(self, parent):
-        super(PreferencesDialog, self).__init__(parent)
-        self.setWindowTitle('Preferences')
+class PreferencesDialog(QWidget):
+    def __init__(self, parent, title='user input', label='comment', text=''):
+       QWidget.__init__(self)
+        
+       # --Layout Stuff---------------------------#
+       # self.setGeometry(QRect(100, 100, 400, 200))
+        
+       mainLayout = QVBoxLayout()
 
+       layout = QHBoxLayout()
+       self.label = QLabel()
+       self.label.setText(label)
+       layout.addWidget(self.label)
+
+       self.text = QLineEdit(text)
+       layout.addWidget(self.text)
+
+       mainLayout.addLayout(layout)
+
+       # --The Button------------------------------#
+       layout = QHBoxLayout()
+       button = QPushButton("OK")  # string or icon
+       self.connect(button, SIGNAL("clicked()"), self.close)
+       layout.addWidget(button)
+
+       mainLayout.addLayout(layout)
+       self.setLayout(mainLayout)
+
+       self.resize(200, 200)
+       self.setWindowTitle(title)
+    
 def quitApp():
     reactor.stop()
     qApp.quit()

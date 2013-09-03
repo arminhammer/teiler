@@ -69,7 +69,7 @@ class Session(object):
         self.config.closeSession(self)
     
     def sendFile(self, path, address='localhost', port=1234):
-        controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
+        controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred(), 'session': self})
         f = FileSenderClientFactory(path, controller, self.id)
         reactor.connectTCP(address, port, f)
         log.msg("Completed is " + str(controller.completed))
@@ -123,7 +123,7 @@ class Session(object):
                 # log.msg("Sending file...")
                 # d = self.sendFile(path, self.address, self.port)
                 self.sendFile(path, self.address, self.port)
-                self.processTransferQueue()
+                # self.processTransferQueue()
                 # log.msg("D is " + str(d))
                 # d.addCallback(self.processTransferQueue)
                 # d.addErrback(self.failure)

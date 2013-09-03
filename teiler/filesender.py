@@ -95,7 +95,8 @@ class FileSenderClient(basic.LineReceiver):
         self.infile.close()
         if self.completed:
             log.msg("Yada Yada success!")
-            self.controller.completed.callback(self.result)
+            self.controller.session.processTransferQueue()
+            # self.controller.completed.callback(self.result)
         else:
             log.msg("Yada Yada failure!")
             self.controller.completed.errback(reason)

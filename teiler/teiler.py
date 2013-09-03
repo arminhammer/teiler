@@ -99,7 +99,7 @@ class Window(QWidget):
         
     def editPreferences(self):
         """ Launches the edit preferences dialog for this window. """
-        self.prefw = PreferencesDialog(self, 'Preferences')
+        self.prefw = PreferencesDialog(self)
         self.prefw.show()
     
     def slotFile(self):
@@ -110,35 +110,39 @@ class Window(QWidget):
         QT_APP.exec_()
 
 class PreferencesDialog(QWidget):
-    def __init__(self, parent, title='user input', label='comment', text=''):
+    def __init__(self, parent):
        QWidget.__init__(self)
-        
+       self.config = parent.config 
        # --Layout Stuff---------------------------#
-       # self.setGeometry(QRect(100, 100, 400, 200))
-        
        mainLayout = QVBoxLayout()
 
        layout = QHBoxLayout()
-       self.label = QLabel()
-       self.label.setText(label)
-       layout.addWidget(self.label)
+       self.hostname = QLabel()
+       self.hostname.setText("Hostname")
+       layout.addWidget(self.hostname)
 
-       self.text = QLineEdit(text)
-       layout.addWidget(self.text)
+       self.hostnameText = QLineEdit(parent.config.name)
+       layout.addWidget(self.hostnameText)
 
        mainLayout.addLayout(layout)
 
        # --The Button------------------------------#
        layout = QHBoxLayout()
        button = QPushButton("OK")  # string or icon
-       self.connect(button, SIGNAL("clicked()"), self.close)
+       self.connect(button, SIGNAL("clicked()"), self.saveAndClose)
        layout.addWidget(button)
 
        mainLayout.addLayout(layout)
        self.setLayout(mainLayout)
 
        self.resize(200, 200)
-       self.setWindowTitle(title)
+       self.setWindowTitle('Preferences')
+
+    def saveAndClose(self):
+        if self.hostnameText.isModified():
+            log.msg("Changing " + self.config.name + " to " + self.hostnameText.text())
+            self.config.name = self.hostnameText.text()
+        self.close()
     
 def quitApp():
     reactor.stop()
@@ -154,9 +158,6 @@ def main():
     parser = argparse.ArgumentParser(description="Exchange files!")
     args = parser.parse_args()
     
-    # Initialize peer discovery using UDP multicast
-    multiCastPort = 8006
-    
     config = Config(utils.getLiveInterface(),  # ip
                           9998,  # tcp port
                           utils.generateSessionID(),
@@ -166,7 +167,7 @@ def main():
                           '230.0.0.30',
                           8005,
                           os.path.join(os.path.expanduser("~"), "teiler"))
-    
+
     reactor.listenMulticast(config.multiCastPort,
                             PeerDiscovery(
                                 reactor,

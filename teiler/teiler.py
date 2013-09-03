@@ -1,9 +1,9 @@
-import argparse
 import os
 import sys
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import SIGNAL, QMargins
+from PyQt4.QtGui import QApplication, QWidget, QAction, QIcon, QMenuBar 
+from PyQt4.QtGui import QVBoxLayout, QStatusBar, QMessageBox
 
 import qt4reactor
 QT_APP = QApplication(sys.argv)
@@ -16,7 +16,6 @@ import utils
 from filereceiver import FileReceiverFactory
 from peerdiscovery import PeerDiscovery
 from peerlist import PeerList
-from peer import Peer
 from session import Session
 from config import Config
 from preferences import Preferences
@@ -103,8 +102,8 @@ class Window(QWidget):
         self.prefw = Preferences(self)
         self.prefw.show()
     
-    def slotFile(self):
-        filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
+    # def slotFile(self):
+        # filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
         
     def run(self):
         self.show()
@@ -113,7 +112,7 @@ class Window(QWidget):
     
 def quitApp():
     reactor.stop()
-    qApp.quit()
+    QT_APP.quit()
 
 def download_path_exists():
     downloadPath = os.path.join(os.path.expanduser("~"), "blaster")
@@ -122,8 +121,6 @@ def download_path_exists():
 
 def main():
     log.startLogging(sys.stdout)
-    parser = argparse.ArgumentParser(description="Exchange files!")
-    args = parser.parse_args()
     
     config = Config(utils.getLiveInterface(),  # ip
                           9998,  # tcp port

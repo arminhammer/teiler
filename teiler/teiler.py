@@ -19,6 +19,7 @@ from peerlist import PeerList
 from peer import Peer
 from session import Session
 from config import Config
+from preferences import Preferences
 
 # Class for the GUI
 class Window(QWidget):
@@ -99,7 +100,7 @@ class Window(QWidget):
         
     def editPreferences(self):
         """ Launches the edit preferences dialog for this window. """
-        self.prefw = PreferencesDialog(self)
+        self.prefw = Preferences(self)
         self.prefw.show()
     
     def slotFile(self):
@@ -109,40 +110,6 @@ class Window(QWidget):
         self.show()
         QT_APP.exec_()
 
-class PreferencesDialog(QWidget):
-    def __init__(self, parent):
-       QWidget.__init__(self)
-       self.config = parent.config 
-       # --Layout Stuff---------------------------#
-       mainLayout = QVBoxLayout()
-
-       layout = QHBoxLayout()
-       self.hostname = QLabel()
-       self.hostname.setText("Hostname")
-       layout.addWidget(self.hostname)
-
-       self.hostnameText = QLineEdit(parent.config.name)
-       layout.addWidget(self.hostnameText)
-
-       mainLayout.addLayout(layout)
-
-       # --The Button------------------------------#
-       layout = QHBoxLayout()
-       button = QPushButton("OK")  # string or icon
-       self.connect(button, SIGNAL("clicked()"), self.saveAndClose)
-       layout.addWidget(button)
-
-       mainLayout.addLayout(layout)
-       self.setLayout(mainLayout)
-
-       self.resize(200, 200)
-       self.setWindowTitle('Preferences')
-
-    def saveAndClose(self):
-        if self.hostnameText.isModified():
-            log.msg("Changing " + self.config.name + " to " + self.hostnameText.text())
-            self.config.name = self.hostnameText.text()
-        self.close()
     
 def quitApp():
     reactor.stop()

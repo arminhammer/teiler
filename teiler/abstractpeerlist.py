@@ -1,8 +1,8 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 class AbstractPeerList:
     
-    #__metaclass__ = ABCMeta
+    # __metaclass__ = ABCMeta
     
     @abstractmethod
     def contains(self, peerID, peerAddress, peerPort):

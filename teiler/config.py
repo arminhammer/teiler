@@ -1,11 +1,9 @@
-from twisted.python import log
-
 # Class to maintain the state of the program
 class Config():
     """ Class to hold on to all instance variables used for state. 
     """
-    def __init__(self, 
-                 address, 
+    def __init__(self,
+                 address,
                  tcpPort,
                  sessionID,
                  name,
@@ -13,7 +11,7 @@ class Config():
                  multiCastAddress,
                  multiCastPort,
                  downloadPath):
-        self.address = address # this is the local IP
+        self.address = address  # this is the local IP
         # port for file receiver to listen on 
         self.tcpPort = tcpPort
         self.sessionID = sessionID
@@ -25,20 +23,7 @@ class Config():
         self.sessions = {}
         ''' Sessions currently downloading, only the Session IDs '''
         self.dlSessions = set()
-        
-    def notifySession(self, sessionID, message, address, port):
-        log.msg("Printing sessions:")
-        for session in self.dlSessions:
-            log.msg("{0}".format(session))
-        if sessionID not in self.dlSessions:
-            log.msg("Session key cannot be found!")
-            return False
-        else:
-            receivedMessage = Message(session.receivedMsg)
-            f = SessionMessageFactory(self, receivedMessage)
-            reactor.connectTCP(address, port, f)
-            return True
-            
+    
     def closeSession(self, session):
         del self.sessions[session.id]
         

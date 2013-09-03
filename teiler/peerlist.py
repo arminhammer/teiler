@@ -1,5 +1,5 @@
-from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QListWidget, QListView, Qt
+from PyQt4.QtCore import SIGNAL, Qt
+from PyQt4.QtGui import QListWidget, QListView
 from abstractpeerlist import AbstractPeerList
 
 # Class that keeps track of the peers and displays them to the user

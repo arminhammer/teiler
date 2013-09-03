@@ -1,7 +1,5 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from peer import Peer
-import utils
+from PyQt4.QtCore import SIGNAL
+from PyQt4.QtGui import QListWidget, QListView, Qt
 from abstractpeerlist import AbstractPeerList
 
 # Class that keeps track of the peers and displays them to the user
@@ -11,7 +9,7 @@ class PeerList(QListWidget, AbstractPeerList):
         super(PeerList, self).__init__(parent)
         self.setVisible(True)
         self.setAcceptDrops(True)
-        #self.teiler.peerList.setDragEnabled(True)
+        # self.teiler.peerList.setDragEnabled(True)
         self.setViewMode(QListView.ListMode)
         
         ''' For testing '''

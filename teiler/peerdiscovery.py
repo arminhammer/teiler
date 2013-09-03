@@ -13,7 +13,7 @@ The process is simple.
 
 import json
 from twisted.python import log
-from twisted.internet import task, reactor
+from twisted.internet import task
 from twisted.internet.protocol import DatagramProtocol 
 from peer import Peer
 from message import Message
@@ -30,20 +30,20 @@ class PeerDiscovery(DatagramProtocol):
     Once the peer has decided to disconnect, it will send an exit message to alert 
     the other nodes of its demise.
     """
-    def __init__(self, 
+    def __init__(self,
                  reactor,
                  sessionID,
                  peers,
-                 name, 
-                 multiCastAddress, 
-                 multiCastPort, 
-                 tcpAddress, 
+                 name,
+                 multiCastAddress,
+                 multiCastPort,
+                 tcpAddress,
                  tcpPort):
         """Set up an instance of the PeerDiscovery protocol by creating 
         the message information needed to broadcast other instances 
         of the protocol running on the same network.
         """
-        self.peers = peers # your list needs to implement append
+        self.peers = peers  # your list needs to implement append
         self.sessionID = sessionID
         self.reactor = reactor
         self.name = name
@@ -53,7 +53,7 @@ class PeerDiscovery(DatagramProtocol):
         self.tcpPort = tcpPort
 
     def sendMessage(self, message):
-        self.transport.write(message.serialize() + '\r\n', 
+        self.transport.write(message.serialize() + '\r\n',
                              (self.multiCastAddress, self.multiCastPort))
 
     def startProtocol(self):
@@ -105,7 +105,7 @@ class PeerDiscovery(DatagramProtocol):
         if peerCommand == exitMsg:
             if self.isPeer(peerID, peerAddress, peerPort):
                 log.msg('dropping a peer')
-                self.removePeer(peerId)
+                self.removePeer(peerID)
 
         elif peerCommand == heartbeatMsg:
             if self.isPeer(peerID, peerAddress, peerPort) == False:
@@ -116,7 +116,7 @@ class PeerDiscovery(DatagramProtocol):
     def isPeer(self, id, address, port):
         """Convenience method to make it easy to tell whether or not a peer 
         is already a peer. """
-        return self.peers.contains(id, address, port) # for use with default dict
+        return self.peers.contains(id, address, port)  # for use with default dict
 
     def removePeer(self, id):
         del self.peers[id]

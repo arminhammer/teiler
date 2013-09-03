@@ -10,6 +10,7 @@ from twisted.internet.defer import Deferred
 from twisted.python import log
 from twisted.internet import reactor
 from sessionmessageprotocol import SessionMessageFactory
+import utils
 
 class FileReceiverProtocol(LineReceiver):
     """ File Receiver """
@@ -47,7 +48,7 @@ class FileReceiverProtocol(LineReceiver):
             dirName = message['dirName']
             msgSession = message['sessionID']
             if message['sessionID'] in self.teiler.dlSessions:
-                reactor.callLater(0, self.createDirectory, self.teiler.downloadPath + dirName)
+                reactor.callLater(0, utils.createDirectory, self.teiler.downloadPath + dirName)
                 receivedMessage = Message(session.receivedMsg)
                 self.transport.write(receivedMessage.serialize() + '\r\n')
             else:
@@ -77,12 +78,7 @@ class FileReceiverProtocol(LineReceiver):
                 self.transport.loseConnection()
         else:
             log.msg("Command not recognized.")
-        
-    def createDirectory(self, dirName):
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
-        log.msg("Creating dir {0}".format(dirName))
-        
+                
     def sendReceivedMessage(self):
         receivedMessage = Message(session.receivedMsg)
         self.transport.write(receivedMessage.serialize() + '\r\n')
@@ -123,21 +119,7 @@ class FileReceiverProtocol(LineReceiver):
                     reason = ' .. file moved too much'
                 if self.remain > 0:
                     reason = ' .. file moved too little'
-            '''
-            if self.success:
-                receivedMessage = Message(session.receivedMsg)
-                self.teiler.notifySession(self.sessionID, receivedMessage.serialize(), self.peerAddress, self.peerPort)
-            else:
-                resendMessage = Message(session.resendMsg)
-                self.teiler.notifySession(self.sessionID, resendMessage.serialize(), self.peerAddress, self.peerPort)
-            '''
-                    
-def fileinfo(self, fname):
-    """ when "file" tool is available, return it's output on "fname" """
-    return (os.system('file 2> /dev/null') != 0 and \
-             os.path.exists(fname) and \
-             os.popen('file "' + fname + '"').read().strip().split(':')[1])
-
+                   
 class FileReceiverFactory(ServerFactory):
     """ file receiver factory """
     protocol = FileReceiverProtocol

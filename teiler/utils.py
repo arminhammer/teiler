@@ -9,6 +9,7 @@ import netifaces
 import uuid
 import M2Crypto
 import ntpath
+from twisted.python import log
 
 def getLiveInterface():
     """will return a list of possible IPv4 addresses"""
@@ -24,6 +25,17 @@ def getLiveInterface():
                 if i['addr'] not in local_network and '192.' in i['addr']:
                     addresses.append(i['addr'])
     return addresses[0] 
+
+def fileinfo(fname):
+    """ when "file" tool is available, return it's output on "fname" """
+    return (os.system('file 2> /dev/null') != 0 and \
+             os.path.exists(fname) and \
+             os.popen('file "' + fname + '"').read().strip().split(':')[1])
+
+def createDirectory(dirName):
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        log.msg("Creating dir {0}".format(dirName))
 
 def _list_files(home):
     file_list = []
@@ -58,13 +70,13 @@ def make_file_list(serve_at):
     return text
     
 
-def save_file_list(text, 
+def save_file_list(text,
                    serve_at,
                    filename):
     with open(serve_at + "/" + filename, 'w') as f:
         f.write(text)
 
-## NEED TESTS
+# # NEED TESTS
 def _make_file(line):
     location = line[:2].replace("\n", "")
     # at some place you will need to allow for resumption of download
@@ -84,7 +96,7 @@ def make_files(filename):
                 _make_dir(line)
 
 def generateSessionID():
-    return str(uuid.UUID(bytes = M2Crypto.m2.rand_bytes(16)))
+    return str(uuid.UUID(bytes=M2Crypto.m2.rand_bytes(16)))
 
 def getUsername():
     """get the username by accessing env vars"""

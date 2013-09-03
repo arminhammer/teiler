@@ -35,14 +35,17 @@ class Window(QWidget):
         self.setMinimumSize(240, 480)
         
         # connects the signals!
-        self.connect(self.peerList, 
+        self.connect(self.peerList,
                      SIGNAL("dropped"), self.sendFileToPeers)
 
+        ''' Will add feature in future version '''
+        '''
         shareFilesAction = QAction(QIcon('exit.png'), '&Share File(s)', self)
         shareFilesAction.setShortcut('Ctrl+O')
         shareFilesAction.setStatusTip('Share File(s)')
         shareFilesAction.triggered.connect(quitApp)
-
+        '''
+        
         preferencesAction = QAction(QIcon('exit.png'), '&Preferences', self)
         preferencesAction.setShortcut('Ctrl+P')
         preferencesAction.setStatusTip('Preferences')
@@ -55,7 +58,10 @@ class Window(QWidget):
 
         menubar = QMenuBar()
         fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(shareFilesAction)
+        
+        ''' Will enable in future versions '''
+        # fileMenu.addAction(shareFilesAction)
+        
         fileMenu.addAction(preferencesAction)
         fileMenu.addAction(exitAction)
 
@@ -73,7 +79,7 @@ class Window(QWidget):
     def sendFileToPeers(self, fileName):
         log.msg("File dropped {0}".format(fileName))
         for peer in self.peerList.iterAllItems():
-            session = Session(str(fileName), self.config, 
+            session = Session(str(fileName), self.config,
                               peer.address, peer.port)
             self.config.sessions[str(session.id)] = session
             session.startTransfer()
@@ -90,7 +96,7 @@ class Window(QWidget):
         else:
             return "cancel"
         
-    def editPreferences( self ):
+    def editPreferences(self):
         """ Launches the edit preferences dialog for this window. """
         prefs = PreferencesDialog(self)
         prefs.exec_()
@@ -103,7 +109,7 @@ class Window(QWidget):
         QT_APP.exec_()
 
 class PreferencesDialog(QDialog):
-    def __init__( self, parent ):
+    def __init__(self, parent):
         super(PreferencesDialog, self).__init__(parent)
         self.setWindowTitle('Preferences')
 
@@ -124,17 +130,17 @@ def main():
     # Initialize peer discovery using UDP multicast
     multiCastPort = 8006
     
-    config = Config(utils.getLiveInterface(), #ip
-                          9998, #tcp port
+    config = Config(utils.getLiveInterface(),  # ip
+                          9998,  # tcp port
                           utils.generateSessionID(),
                           utils.getUsername(),
                           PeerList(),
-                          #udp connection information
+                          # udp connection information
                           '230.0.0.30',
                           8005,
                           os.path.join(os.path.expanduser("~"), "teiler"))
     
-    reactor.listenMulticast(config.multiCastPort, 
+    reactor.listenMulticast(config.multiCastPort,
                             PeerDiscovery(
                                 reactor,
                                 config.sessionID,

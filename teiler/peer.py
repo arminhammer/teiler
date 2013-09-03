@@ -1,6 +1,4 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-import utils
+from PyQt4.QtGui import QListWidgetItem
 from abstractpeer import AbstractPeer
 
 # Class to represent a peer on the network and the gui

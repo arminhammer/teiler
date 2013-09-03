@@ -1,15 +1,12 @@
-import os, json
+import json
 from binascii import crc32
 from twisted.protocols import basic
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
 import session
-from session import Session
 from message import Message
-from twisted.internet.defer import Deferred
 from twisted.python import log
 from twisted.internet import reactor
-from sessionmessageprotocol import SessionMessageFactory
 import utils
 
 class FileReceiverProtocol(LineReceiver):
@@ -29,7 +26,6 @@ class FileReceiverProtocol(LineReceiver):
         
     def lineReceived(self, line):
         """ """
-        d = Deferred()
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
         if message['command'] == session.beginMsg:
@@ -114,12 +110,13 @@ class FileReceiverProtocol(LineReceiver):
             self.outFile.close()
             if self.remain != 0:
                 print str(self.remain) + ')!=0'
-                remove_base = '--> removing tmpfile@'
+                '''
                 if self.remain < 0:
                     reason = ' .. file moved too much'
                 if self.remain > 0:
                     reason = ' .. file moved too little'
-                   
+                '''
+                
 class FileReceiverFactory(ServerFactory):
     """ file receiver factory """
     protocol = FileReceiverProtocol

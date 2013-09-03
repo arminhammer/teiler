@@ -1,14 +1,9 @@
-from binascii import crc32
 import os, json
 
 from twisted.python import log
 from twisted.protocols import basic
-from twisted.internet.protocol import ServerFactory
 from twisted.internet.protocol import ClientFactory
-from twisted.protocols.basic import FileSender, LineReceiver
-from twisted.internet.defer import Deferred
-from twisted.internet import reactor
-import utils
+from twisted.protocols.basic import FileSender
 import session
 
 class FileSenderClient(basic.LineReceiver):
@@ -46,7 +41,7 @@ class FileSenderClient(basic.LineReceiver):
             self.transport.loseConnection()
 
             # Indicate a user cancelled result
-            self.result = TransferCancelled('User cancelled transfer')
+            # self.result = TransferCancelled('User cancelled transfer')
 
         return data
 
@@ -88,7 +83,6 @@ class FileSenderClient(basic.LineReceiver):
             
             ance
         """
-        from twisted.internet.error import ConnectionDone
         basic.LineReceiver.connectionLost(self, reason)
         print ' - connectionLost\n  * ', reason.getErrorMessage()
         print ' * finished with', self.path

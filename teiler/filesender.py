@@ -13,6 +13,7 @@ class FileSenderClient(basic.LineReceiver):
         """ """
         self.path = path
         self.controller = controller
+        self.relPath = "/" + self.path.lstrip(self.controller.session.parentPath)
 
         self.infile = open(self.path, 'rb')
         self.insize = os.stat(self.path).st_size
@@ -68,7 +69,7 @@ class FileSenderClient(basic.LineReceiver):
         """ """
         fileHeader = session.Message(session.fileMsg)
         fileHeader.fileSize = self.insize
-        fileHeader.fileName = self.path
+        fileHeader.fileName = self.relPath
         fileHeader.sessionID = self.sessionID
         self.transport.write(fileHeader.serialize() + '\r\n')
         sender = FileSender()

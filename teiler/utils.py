@@ -102,7 +102,7 @@ def getUsername():
     """get the username by accessing env vars"""
     return pwd.getpwuid(os.getuid()).pw_name.title()
 
-def getBaseFromPath(path):
+def getBaseNameFromPath(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
 

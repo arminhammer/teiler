@@ -7,6 +7,7 @@ from filesender import FileSenderClientFactory
 import utils
 from message import Message
 from sessionmessageprotocol import SessionMessageFactory
+import ntpath
 
 beginMsg = "BEGIN"
 acceptMsg = "ACCEPT"
@@ -28,13 +29,14 @@ class Session(object):
         self.fileName = fileName
         self.status = 0
         self.config = config
+        self.parentPath = ""
        
     def __str__(self):
         return str(self.id)
     
     def startTransfer(self):
         beginMessage = Message(beginMsg, self.id)
-        beginMessage.fileName = utils.getBaseFromPath(self.fileName)
+        beginMessage.fileName = utils.getBaseNameFromPath(self.fileName)
         log.msg("Sending BEGIN")
         log.msg("Message is {0}".format(beginMsg))
         f = SessionMessageFactory(self, beginMessage)
@@ -93,8 +95,11 @@ class Session(object):
                 self.transferQueue.put(self.fileName)
             elif os.path.isdir(self.fileName):
                 log.msg("Root is " + self.fileName)
-                shortPath = utils.getBaseFromPath(self.fileName)
-                log.msg("shortPath is " + self.fileName)
+                shortPath = utils.getBaseNameFromPath(self.fileName)
+                log.msg("shortPath is " + shortPath)
+                head, tail = ntpath.split(self.fileName)
+                self.parentPath = head
+                log.msg("self.parentPath is " + self.parentPath)
                 self.transferQueue.put(self.fileName)
                 for root, dirs, files in os.walk(self.fileName, topdown=True):
                     for name in dirs:
@@ -103,11 +108,11 @@ class Session(object):
                     for name in files:
                         self.transferQueue.put(os.path.join(root, name))
                         log.msg("QUEUE: Adding file {0}".format(os.path.join(root, name)))
-                reactor.callLater(0, self.processTransferQueue, shortPath)
+                reactor.callLater(0, self.processTransferQueue)
             else:
                 log.msg("File pathname cannot be found.")
        
-    def processTransferQueue(self, basePath):
+    def processTransferQueue(self):
         remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))
         if remaining == 0:
@@ -118,12 +123,12 @@ class Session(object):
             path = self.transferQueue.get()
             log.msg("Sending {0}".format(path))
             if os.path.isdir(path):
-                if path == basePath:
+                if path == self.parentPath:
                     d = self.sendDirectory(path)
                     log.msg("Sending {0}".format(path))
                 else:
-                    d = self.sendDirectory(path.lstrip(basePath))
-                    log.msg("Sending {0}".format(path.lstrip(basePath)))
+                    d = self.sendDirectory("/" + path.lstrip(self.parentPath))
+                    log.msg("Sending {0}".format("/" + path.lstrip(self.parentPath)))
                 d.addCallback(self.success)
                 d.addErrback(self.failure)
             else:

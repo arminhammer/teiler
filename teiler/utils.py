@@ -22,7 +22,7 @@ def getLiveInterface():
         if test_iface is not None:
             for i in test_iface:
                 # you need to make sure it is a local
-                if i['addr'] not in local_network and '192.' or '10.' or '172.' in i['addr']:
+                if i['addr'] not in local_network and ('192.' or '10.' or '172.') in i['addr']:
                     addresses.append(i['addr'])
     return addresses[0] 
 

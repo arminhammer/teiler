@@ -34,7 +34,7 @@ class Session(object):
     
     def startTransfer(self):
         beginMessage = Message(beginMsg, self.id)
-        beginMessage.fileName = self.fileName
+        beginMessage.fileName = utils.getBaseFromPath(self.fileName)
         log.msg("Sending BEGIN")
         log.msg("Message is {0}".format(beginMsg))
         f = SessionMessageFactory(self, beginMessage)
@@ -89,18 +89,25 @@ class Session(object):
         
     def startFileSend(self):
             log.msg("Calculating files...")
-            self.transferQueue.put(self.fileName)
-            if os.path.isdir(self.fileName):
+            if os.path.isfile(self.fileName):
+                self.transferQueue.put(self.fileName)
+            elif os.path.isdir(self.fileName):
+                log.msg("Root is " + self.fileName)
+                shortPath = utils.getBaseFromPath(self.fileName)
+                log.msg("shortPath is " + self.fileName)
+                self.transferQueue.put(self.fileName)
                 for root, dirs, files in os.walk(self.fileName, topdown=True):
                     for name in dirs:
                         self.transferQueue.put(os.path.join(root, name))
-                        log.msg("QUEUE: Adding dir {0}".format(name))
+                        log.msg("QUEUE: Adding dir {0}".format(os.path.join(root, name)))
                     for name in files:
                         self.transferQueue.put(os.path.join(root, name))
-                        log.msg("QUEUE: Adding file {0}".format(name))
-                reactor.callLater(0, self.processTransferQueue)
+                        log.msg("QUEUE: Adding file {0}".format(os.path.join(root, name)))
+                reactor.callLater(0, self.processTransferQueue, shortPath)
+            else:
+                log.msg("File pathname cannot be found.")
        
-    def processTransferQueue(self):
+    def processTransferQueue(self, basePath):
         remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))
         if remaining == 0:
@@ -111,16 +118,14 @@ class Session(object):
             path = self.transferQueue.get()
             log.msg("Sending {0}".format(path))
             if os.path.isdir(path):
-                d = self.sendDirectory(path)
+                if path == basePath:
+                    d = self.sendDirectory(path)
+                    log.msg("Sending {0}".format(path))
+                else:
+                    d = self.sendDirectory(path.lstrip(basePath))
+                    log.msg("Sending {0}".format(path.lstrip(basePath)))
                 d.addCallback(self.success)
                 d.addErrback(self.failure)
             else:
-                # log.msg("Sending file...")
-                # d = self.sendFile(path, self.address, self.port)
                 self.sendFile(path, self.address, self.port)
-                # self.processTransferQueue()
-                # log.msg("D is " + str(d))
-                # d.addCallback(self.processTransferQueue)
-                # d.addErrback(self.failure)
-                # log.msg("Result was {0}")
-                # reactor.callLater(0, self.sendFile, path, self.address, self.port)
+

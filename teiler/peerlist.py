@@ -3,7 +3,7 @@ from PyQt4.QtGui import QListWidget, QListView
 from abstractpeerlist import AbstractPeerList
 
 # Class that keeps track of the peers and displays them to the user
-class PeerList(QListWidget, AbstractPeerList):
+class PeerList(QListView, AbstractPeerList):
     
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
@@ -11,6 +11,7 @@ class PeerList(QListWidget, AbstractPeerList):
         self.setAcceptDrops(True)
         # self.teiler.peerList.setDragEnabled(True)
         self.setViewMode(QListView.ListMode)
+        self.peers = []
         
         ''' For testing '''
         '''
@@ -20,8 +21,8 @@ class PeerList(QListWidget, AbstractPeerList):
         '''
     
     def contains(self, peerID, peerAddress, peerPort):
-        for i in range(self.count()):
-            item = self.item(i)
+        for i in range(len(self.peers)):
+            item = self.peers[i]
             if peerID == item.id:
                 if(peerAddress == item.address):
                     if(int(peerPort) == item.port):

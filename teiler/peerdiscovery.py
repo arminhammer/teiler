@@ -99,7 +99,8 @@ class PeerDiscovery(DatagramProtocol):
         log.msg("Does the list contain? {0}".format(self.peers.contains(peerID, peerAddress, peerPort)))    
         if not self.peers.contains(peerID, peerAddress, peerPort):
             newPeer = Peer(peerID, peerName, peerAddress, peerPort)
-            self.peers.addItem(newPeer)
+            self.addPeer(newPeer)
+            #self.peers.addItem(newPeer)
             log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             
         if peerCommand == exitMsg:
@@ -122,4 +123,4 @@ class PeerDiscovery(DatagramProtocol):
         del self.peers[id]
 
     def addPeer(self, peer):
-        self.peers[peer.id] = peer
+        self.peers.peers.append(peer)

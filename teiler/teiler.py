@@ -101,15 +101,11 @@ class Window(QWidget):
         """ Launches the edit preferences dialog for this window. """
         self.prefw = Preferences(self)
         self.prefw.show()
-    
-    # def slotFile(self):
-        # filename = QFileDialog.getOpenFileName("", "*.py", self, "FileDialog")
-        
+           
     def run(self):
         self.show()
         QT_APP.exec_()
-
-    
+  
 def quitApp():
     reactor.stop()
     QT_APP.quit()

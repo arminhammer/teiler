@@ -133,4 +133,3 @@ class Session(object):
                 d.addErrback(self.failure)
             else:
                 self.sendFile(path, self.address, self.port)
-

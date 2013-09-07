@@ -95,13 +95,6 @@ class PeerDiscovery(DatagramProtocol):
         peerPort = msg['tcpPort']
         peerID = msg['sessionID']
         log.msg("Peer: Address: {0} Name: {1}".format(peerAddress, peerName))
-
-        log.msg("Does the list contain? {0}".format(self.peers.contains(peerID, peerAddress, peerPort)))    
-        if not self.peers.contains(peerID, peerAddress, peerPort):
-            newPeer = Peer(peerID, peerName, peerAddress, peerPort)
-            self.addPeer(newPeer)
-            #self.peers.addItem(newPeer)
-            log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             
         if peerCommand == exitMsg:
             if self.isPeer(peerID, peerAddress, peerPort):
@@ -109,10 +102,12 @@ class PeerDiscovery(DatagramProtocol):
                 self.removePeer(peerID)
 
         elif peerCommand == heartbeatMsg:
-            if self.isPeer(peerID, peerAddress, peerPort) == False:
-                newPeer = Peer(peerID, peerName, peerAddress, peerPort)
-                self.addPeer(newPeer)
-                log.msg("Added new Peer: address: {0}, name: {1}".format(peerAddress, peerName))
+            log.msg("Does the list contain? {0}".format(self.peers.contains(peerID, peerAddress, peerPort)))
+            if not self.peers.contains(peerID, peerAddress, peerPort):
+                if self.isPeer(peerID, peerAddress, peerPort) == False:
+                    newPeer = Peer(peerID, peerName, peerAddress, peerPort)
+                    self.addPeer(newPeer)
+                    log.msg("Added new Peer: address: {0}:{1}, name: {2}, id: {3}".format(peerAddress, peerPort, peerName, peerID))
             
     def isPeer(self, id, address, port):
         """Convenience method to make it easy to tell whether or not a peer 

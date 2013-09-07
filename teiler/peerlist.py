@@ -20,7 +20,7 @@ class PeerList(QWidget, AbstractPeerList):
         self.peers = []
  
     def add(self, peer):
-        self.layout.addChildWidget(peer)
+        self.layout.addWidget(peer)
         #peer.show()
         self.connect(peer, SIGNAL("dropped"), self.notifyTeiler)
         log.msg("Peerlist: added peer " + str(peer))

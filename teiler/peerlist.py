@@ -24,16 +24,18 @@ class PeerList(QWidget, AbstractPeerList):
         #peer.show()
         self.connect(peer, SIGNAL("dropped"), self.notifyTeiler)
         log.msg("Peerlist: added peer " + str(peer))
+        log.msg("Count is: " + str(self.layout.count()))
     
     def notifyTeiler(self, fileName, peerID, peerAddress, peerPort):
         self.emit(SIGNAL("initTransfer"), fileName, peerID, peerAddress, peerPort)
         
     def contains(self, peerID, peerAddress, peerPort):
-        for i in range(len(self.peers)):
-            item = self.peers[i]
-            if peerID == item.id:
-                if(peerAddress == item.address):
-                    if(int(peerPort) == item.port):
+        peers = (self.layout.itemAt(i).widget() for i in range(self.layout.count())) 
+        for p in peers:
+            log.msg("Type is " + str(type(p)))
+            if peerID == p.id:
+                if(peerAddress == p.address):
+                    if(int(peerPort) == p.port):
                         return True
         return False
     

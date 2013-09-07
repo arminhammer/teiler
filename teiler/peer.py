@@ -46,7 +46,7 @@ class Peer(QWidget, AbstractPeer):
             event.accept()
         else:
             event.ignore()
-
+ 
     def dropEvent(self, event):
         mD = event.mimeData()
         if mD.hasUrls:

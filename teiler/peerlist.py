@@ -1,16 +1,22 @@
 from PyQt4.QtCore import SIGNAL, Qt
-from PyQt4.QtGui import QListWidget, QListView
+from PyQt4.QtGui import QWidget, QVBoxLayout, QScrollArea
 from abstractpeerlist import AbstractPeerList
+from twisted.python import log
 
 # Class that keeps track of the peers and displays them to the user
-class PeerList(QListView, AbstractPeerList):
+class PeerList(QWidget, AbstractPeerList):
     
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
-        self.setVisible(True)
-        self.setAcceptDrops(True)
+        #self.setVisible(True)
+        #self.setAcceptDrops(True)
         # self.teiler.peerList.setDragEnabled(True)
-        self.setViewMode(QListView.ListMode)
+        #self.setViewMode(QListView.ListMode)
+        self.layout = QVBoxLayout(self)
+        #self.setLayout(layout)
+        self.setMinimumSize(240, 480)
+        #self.scrollArea = QScrollArea(self)
+        #self.scrollArea.setWidgetResizable(True)
         self.peers = []
         
         ''' For testing '''
@@ -20,6 +26,15 @@ class PeerList(QListView, AbstractPeerList):
         self.addItem(newPeer)
         '''
     
+    def add(self, peer):
+        self.layout.addChildWidget(peer)
+        #peer.show()
+        self.connect(peer, SIGNAL("dropped"), self.notifyTeiler)
+        log.msg("Peerlist: added peer " + str(peer))
+    
+    def notifyTeiler(self, fileName, peerID, peerAddress, peerPort):
+        self.emit(SIGNAL("initTransfer"), fileName, peerID, peerAddress, peerPort)
+        
     def contains(self, peerID, peerAddress, peerPort):
         for i in range(len(self.peers)):
             item = self.peers[i]
@@ -33,6 +48,7 @@ class PeerList(QListView, AbstractPeerList):
         for i in range(self.count()):
             yield self.item(i)
    
+    '''
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
             event.accept()
@@ -60,3 +76,5 @@ class PeerList(QListView, AbstractPeerList):
             self.emit(SIGNAL("dropped"), fileName)
         else:
             event.ignore()
+    '''
+            

@@ -37,7 +37,7 @@ class Window(QWidget):
         
         # connects the signals!
         self.connect(self.peerList,
-                     SIGNAL("dropped"), self.sendFileToPeers)
+                     SIGNAL("initTransfer"), self.sendFileToPeer)
 
         ''' Will add feature in future version '''
         '''
@@ -77,14 +77,12 @@ class Window(QWidget):
         layout.addWidget(self.peerList)
         layout.addWidget(statusBar)
         
-    def sendFileToPeers(self, fileName):
+    def sendFileToPeer(self, fileName, peerID, peerAddress, peerPort):
         log.msg("File dropped {0}".format(fileName))
-        for peer in self.peerList.iterAllItems():
-            session = Session(str(fileName), self.config,
-                              peer.address, peer.port)
-            self.config.sessions[str(session.id)] = session
-            session.startTransfer()
-
+        session = Session(str(fileName), self.config, peerAddress, peerPort)
+        self.config.sessions[str(session.id)] = session
+        session.startTransfer()
+            
     def questionMessage(self, fileName, peerName):    
         reply = QMessageBox.question(self, "Accept file download?",
                 "Do you want to accept the {0} from {1}?".format(fileName,

@@ -110,7 +110,7 @@ class PeerDiscovery(DatagramProtocol):
 
         elif peerCommand == heartbeatMsg:
             if self.isPeer(peerID, peerAddress, peerPort) == False:
-                newPeer = Peer(peerName, peerAddress, peerPort)
+                newPeer = Peer(peerID, peerName, peerAddress, peerPort)
                 self.addPeer(newPeer)
                 log.msg("Added new Peer: address: {0}, name: {1}".format(peerAddress, peerName))
             
@@ -123,4 +123,4 @@ class PeerDiscovery(DatagramProtocol):
         del self.peers[id]
 
     def addPeer(self, peer):
-        self.peers.peers.append(peer)
+        self.peers.add(peer)

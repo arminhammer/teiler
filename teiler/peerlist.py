@@ -18,14 +18,7 @@ class PeerList(QWidget, AbstractPeerList):
         #self.scrollArea = QScrollArea(self)
         #self.scrollArea.setWidgetResizable(True)
         self.peers = []
-        
-        ''' For testing '''
-        '''
-        id = utils.generateSessionID()
-        newPeer = Peer(id, "testHostName", "testHost", 9989)
-        self.addItem(newPeer)
-        '''
-    
+ 
     def add(self, peer):
         self.layout.addChildWidget(peer)
         #peer.show()
@@ -47,34 +40,4 @@ class PeerList(QWidget, AbstractPeerList):
     def iterAllItems(self):
         for i in range(self.count()):
             yield self.item(i)
-   
-    '''
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.accept()
-        else:
-            event.ignore()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        mD = event.mimeData()
-        if mD.hasUrls:
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-            fileName = mD.urls()[0].toLocalFile()
-            print "fileName is {0}".format(fileName)
-            links = []
-            for url in event.mimeData().urls():
-                links.append(str(url.toLocalFile()))
-                print "Added {0}".format(str(url.toLocalFile()))
-            self.emit(SIGNAL("dropped"), fileName)
-        else:
-            event.ignore()
-    '''
-            
+ 

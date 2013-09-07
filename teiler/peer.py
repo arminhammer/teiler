@@ -11,8 +11,6 @@ class Peer(QWidget, AbstractPeer):
         self.address = address
         self.name = name
         self.port = int(port)
-        #self.setText("\n  {0}\n  {1}:{2}\n".format(self.name, self.address, self.port))
-        #self.setSelected(False)
         self.setAcceptDrops(True)
         self.setMinimumSize(240, 60)
         self.setMaximumSize(240, 60)
@@ -20,7 +18,6 @@ class Peer(QWidget, AbstractPeer):
         palette = self.palette()
         palette.setColor(self.backgroundRole(), Qt.white)
         self.setPalette(palette)
-        #self.show()
         vbox = QVBoxLayout()
         nameLabel = QLabel(self.name)
         vbox.addWidget(nameLabel)
@@ -64,12 +61,3 @@ class Peer(QWidget, AbstractPeer):
             self.emit(SIGNAL("dropped"), fileName, self.id, self.address, self.port)
         else:
             event.ignore()
-    
-    '''
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.accept()
-            self.setSelected(True)
-        else:
-            event.ignore()
-    '''

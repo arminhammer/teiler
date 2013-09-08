@@ -1,11 +1,10 @@
 from PyQt4.QtGui import QWidget, QListWidgetItem, QVBoxLayout, QLabel
 from PyQt4.QtCore import Qt, SIGNAL
-from abstractpeer import AbstractPeer
 
 # Class to represent a peer on the network and the gui
-class Peer(QWidget, AbstractPeer):
+class Peer(QWidget):
     def __init__(self, id, name, address, port):
-        #super(Peer, self).__init__(parent)
+        # super(Peer, self).__init__(parent)
         QWidget.__init__(self)
         self.id = id
         self.address = address

@@ -1,16 +1,22 @@
 from PyQt4.QtCore import SIGNAL, Qt
 from PyQt4.QtGui import QWidget, QVBoxLayout, QScrollArea
-from abstractpeerlist import AbstractPeerList
+from ipeerlist import IPeerList
 from twisted.python import log
+import zope.interface
 
 # Class that keeps track of the peers and displays them to the user
-class PeerList(QWidget, AbstractPeerList):
+class PeerList(QWidget):
+    zope.interface.implements(IPeerList)
     
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
         self.layout = QVBoxLayout(self)
         self.setMinimumSize(240, 480)
- 
+        did = IPeerList.implementedBy(PeerList)
+        log.msg("did is " + str(did))
+        if not IPeerList.implementedBy(PeerList):
+            log.msg("The PeerList class does not correctly implement IPeerList!")
+        
     def add(self, peer):
         self.layout.addWidget(peer)
         self.connect(peer, SIGNAL("dropped"), self.notifyTeiler)

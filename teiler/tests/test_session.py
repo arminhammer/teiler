@@ -1,26 +1,39 @@
 from twisted.trial import unittest
 from session import Session
+from config import Config
+from peerlist import PeerList
+import os, utils
 
 class SessionTestCase(unittest.TestCase):
     
     def setUp(self):
-        pass
+        self.fileName = os.path.join(os.path.expanduser("~"), "teiler/test/test.txt")
+        self.address = '127.0.0.1'
+        self.port = 8989
+        self.multiCastAddress = '230.0.0.40'
+        self.multiCastPort = 9090
+        self.name = 'TestNode'
+        self.downloadPath = os.path.join(os.path.expanduser("~"), "teiler/test/downloads")
+        self.peerList = PeerList()
+        self.config = Config(self.address, 
+                             self.port, 
+                             utils.generateSessionID(), 
+                             self.name, 
+                             self.peerList,
+                             self.multiCastAddress,
+                             self.multiCastPort,
+                             self.downloadPath)
+        
+        self.session = Session(self.fileName, self.config, self.address, self.port)
     
-    def test_str(self):
-        self.fail()
-        ''' 
-        return str(self.id)
-         '''
     
     def test_startTransfer(self):
-        self.fail()
-        '''
-        self.sendBeginning()
-        '''
-         
+        self.session.startTransfer()
+    
+    '''     
     def test_processResponse(self):
         self.fail()
-        '''
+        
         log.msg("Response received: {0}".format(msg))
         message = json.loads(msg)
         if message['command'] == acceptMsg and self.status == 1:
@@ -34,10 +47,11 @@ class SessionTestCase(unittest.TestCase):
         else:
             log.msg("NOT RECOGNIZED!")  
         '''
-        
+    
+    '''    
     def test_sendBeginning(self):
         self.fail()
-        '''
+        
         beginMessage = Message(beginMsg, self.id)
         beginMessage.fileName = self.fileName
         log.msg("Sending BEGIN")
@@ -46,10 +60,11 @@ class SessionTestCase(unittest.TestCase):
         self.status = 1
         reactor.connectTCP(self.address, self.port, f)
         '''
-        
+    
+    '''    
     def test_sendEnd(self):
         self.fail()
-        '''
+        
         endMessage = Message(endMsg, self.id)
         log.msg("Sending EOT")
         f = SessionMessageFactory(endMessage)
@@ -58,18 +73,20 @@ class SessionTestCase(unittest.TestCase):
         self.config.closeSession(self)
         '''
         
+    '''
     def test_sendFile(self):
         self.fail()
-        '''
+        
         controller = type('test', (object,), {'cancel':False, 'total_sent':0, 'completed':Deferred()})
         f = FileSenderClientFactory(path, controller, self.id)
         reactor.connectTCP(address, port, f)
         return controller.completed
         '''
-        
+    
+    '''    
     def test_startFileSend(self):
         self.fail()
-        '''
+       
             log.msg("Calculating files...")
             self.transferQueue.put(self.fileName)
             if os.path.isdir(self.fileName):
@@ -82,11 +99,10 @@ class SessionTestCase(unittest.TestCase):
                         log.msg("QUEUE: Adding file {0}".format(name))
                 reactor.callLater(0, self.processTransferQueue)
        '''
-        
+    '''    
     def test_processTransferQueue(self):
         self.fail()
-        '''
-        remaining = self.transferQueue.qsize()
+                remaining = self.transferQueue.qsize()
         log.msg("Processing queue.  Queue items remaining: {0}".format(remaining))
         if remaining == 0:
             endMessage = Message(endMsg, self.id)

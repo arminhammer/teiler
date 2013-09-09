@@ -2,7 +2,21 @@ from twisted.trial import unittest
 from session import Session
 from config import Config
 from peerlist import PeerList
+from filereceiver import FileReceiverFactory
 import os, utils
+from twisted.test import proto_helpers
+
+class FakeTeilerWindow(object):
+    def __init__(self):
+        self.id = "id"
+
+class FakePeerList(object):
+    def __init__(self):
+        self.id = "id"
+
+class FakeConfig(object):
+    def __init__(self):
+        self.id = "id"
 
 class SessionTestCase(unittest.TestCase):
     
@@ -10,25 +24,19 @@ class SessionTestCase(unittest.TestCase):
         self.fileName = os.path.join(os.path.expanduser("~"), "teiler/test/test.txt")
         self.address = '127.0.0.1'
         self.port = 8989
-        self.multiCastAddress = '230.0.0.40'
-        self.multiCastPort = 9090
-        self.name = 'TestNode'
-        self.downloadPath = os.path.join(os.path.expanduser("~"), "teiler/test/downloads")
-        self.peerList = PeerList()
-        self.config = Config(self.address, 
-                             self.port, 
-                             utils.generateSessionID(), 
-                             self.name, 
-                             self.peerList,
-                             self.multiCastAddress,
-                             self.multiCastPort,
-                             self.downloadPath)
-        
+        self.config = FakeConfig()
+        self.teilerWindow = FakeTeilerWindow()
+        self.receiverConfig = FakeConfig()
         self.session = Session(self.fileName, self.config, self.address, self.port)
-    
+        
+        factory = FileReceiverFactory(self.config, self.teilerWindow)
+        self.receiverProto = factory.buildProtocol((self.address, self.port))
+        self.tr = proto_helpers.StringTransport()
+        self.receiverProto.makeConnection(self.tr)
     
     def test_startTransfer(self):
         self.session.startTransfer()
+        self.assertEqual(self.tr.value(), "{\"sessionID\": \"" + self.session.id + "\", \"command\": \"BEGIN\", \"fileName\": \"" + self.fileName + "\"}")
     
     '''     
     def test_processResponse(self):

@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QWidget, QListWidgetItem, QVBoxLayout, QLabel
+from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel
 from PyQt4.QtCore import Qt, SIGNAL
 from abstractpeer import AbstractPeer
 

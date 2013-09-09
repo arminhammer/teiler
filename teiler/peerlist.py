@@ -1,5 +1,5 @@
-from PyQt4.QtCore import SIGNAL, Qt
-from PyQt4.QtGui import QWidget, QVBoxLayout, QScrollArea
+from PyQt4.QtCore import SIGNAL
+from PyQt4.QtGui import QWidget, QVBoxLayout
 from abstractpeerlist import AbstractPeerList
 from twisted.python import log
 

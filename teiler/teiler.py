@@ -32,7 +32,8 @@ class Window(QWidget):
         self.config = config
         self.peerList = config.peerList
         self.setWindowTitle('BlastShare')
-        self.setMinimumSize(240, 480)
+        self.setMinimumSize(320, 480)
+        self.setMaximumWidth(320)
         self.prefw = None
         
         # connects the signals!

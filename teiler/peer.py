@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel
-from PyQt4.QtCore import Qt, SIGNAL
+from PyQt4.QtCore import Qt, SIGNAL, QMargins
 
 # Class to represent a peer on the network and the gui
 class Peer(QWidget):
@@ -11,8 +11,9 @@ class Peer(QWidget):
         self.name = name
         self.port = int(port)
         self.setAcceptDrops(True)
-        self.setMinimumSize(240, 60)
-        self.setMaximumSize(240, 60)
+        self.setMinimumSize(320, 80)
+        self.setMaximumSize(320, 80)
+        #self.setContentsMargins(QMargins(0, 0, 0, 0))
         self.setAutoFillBackground(True)
         palette = self.palette()
         palette.setColor(self.backgroundRole(), Qt.white)

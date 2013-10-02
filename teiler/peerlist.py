@@ -1,4 +1,4 @@
-from PyQt4.QtCore import SIGNAL
+from PyQt4.QtCore import SIGNAL, QMargins, Qt
 from PyQt4.QtGui import QWidget, QVBoxLayout
 from ipeerlist import IPeerList
 from twisted.python import log
@@ -11,7 +11,9 @@ class PeerList(QWidget):
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
         self.layout = QVBoxLayout(self)
-        self.setMinimumSize(240, 480)
+        self.setMinimumSize(320, 480)
+        self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.layout.setAlignment(Qt.AlignTop)
         did = IPeerList.implementedBy(PeerList)
         log.msg("did is " + str(did))
         if not IPeerList.implementedBy(PeerList):

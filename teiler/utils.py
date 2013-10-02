@@ -10,11 +10,15 @@ import uuid
 import M2Crypto
 import ntpath
 from twisted.python import log
+import re
 
 def getLiveInterface():
     """will return a list of possible IPv4 addresses"""
     addresses = []
     local_network = ['127.0.0.1', '127.0.1.1', '127.1.1.1']
+    lan_prefixes = ["10\.\d{1,3}\.\d{1,3}\.\d{1,3}", "192\.168\.\d{1,3}\.\d{1,3}", "172\.16\.\d{1,3}\.\d{1,3}"]
+    lan_patterns = "(" + ")|(".join(lan_prefixes) + ")"
+    #lan_prefixes = ['10.','192.','172.']
 
     # loop over the available network interfaces and try to get the LAN level IP
     for iface in netifaces.interfaces():
@@ -22,7 +26,7 @@ def getLiveInterface():
         if test_iface is not None:
             for i in test_iface:
                 # you need to make sure it is a local
-                if i['addr'] not in local_network and ('192.' or '10.' or '172.') in i['addr']:
+                if i['addr'] not in local_network and re.match(lan_patterns, i['addr']):
                     addresses.append(i['addr'])
     return addresses[0] 
 
@@ -105,5 +109,3 @@ def getUsername():
 def getBaseNameFromPath(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
-
-                

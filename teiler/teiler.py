@@ -83,19 +83,7 @@ class Window(QWidget):
         session = Session(str(fileName), self.config, peerAddress, peerPort)
         self.config.sessions[str(session.id)] = session
         session.startTransfer()
-    
-    def questionMessage(self, fileName, peerName):    
-        reply = QMessageBox.question(self, "Accept file download?",
-                "Do you want to accept the {0} from {1}?".format(fileName,
-                                                                 peerName),
-                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-        if reply == QMessageBox.Yes:
-            return "yes"
-        elif reply == QMessageBox.No:
-            return "no"
-        else:
-            return "cancel"
-            
+         
     def editPreferences(self):
         """ Launches the edit preferences dialog for this window. """
         self.prefw = Preferences(self)

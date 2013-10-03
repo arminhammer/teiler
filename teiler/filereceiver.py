@@ -29,7 +29,8 @@ class FileReceiverProtocol(LineReceiver):
         message = json.loads(line)
         log.msg("Receiver received message {0}".format(message))
         if message['command'] == session.beginMsg:
-            ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
+            # ok = self.teilerWindow.questionMessage(message['fileName'], "peer")
+            ok = self.teiler.peerList.askPeer(message['fileName'], message['peerID'], message['peerName'], message['peerAddress'], message['peerPort'])
             log.msg("OK is {0}".format(ok))
             if ok == "no":
                 log.msg("Download rejected")

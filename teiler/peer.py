@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel
+from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel, QProgressBar
 from PyQt4.QtCore import Qt, SIGNAL, QMargins
 
 # Class to represent a peer on the network and the gui
@@ -13,15 +13,17 @@ class Peer(QWidget):
         self.setAcceptDrops(True)
         self.setMinimumSize(320, 80)
         self.setMaximumSize(320, 80)
-        #self.setContentsMargins(QMargins(0, 0, 0, 0))
+        # self.setContentsMargins(QMargins(0, 0, 0, 0))
         self.setAutoFillBackground(True)
         palette = self.palette()
         palette.setColor(self.backgroundRole(), Qt.white)
         self.setPalette(palette)
-        vbox = QVBoxLayout()
+        self.layout = QVBoxLayout()
         nameLabel = QLabel(self.name)
-        vbox.addWidget(nameLabel)
-        self.setLayout(vbox)
+        netLabel = QLabel(str(self.address) + ":" + str(self.port))
+        self.layout.addWidget(nameLabel)
+        self.layout.addWidget(netLabel)
+        self.setLayout(self.layout)
         
     def __str__(self):
         return self.id
@@ -33,6 +35,12 @@ class Peer(QWidget):
                 if self.port == other.port:
                     return True
         return False
+    
+    def addAcceptTransferPrompt(self, fileName, peerName):
+        acceptText = QLabel(peerName + " wants to send you " + fileName + ".  Accept?")
+        progressBar = QProgressBar(self)
+        self.layout.addWidget(acceptText)
+        self.layout.addWidget(progressBar)
     
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:

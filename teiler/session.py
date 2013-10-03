@@ -37,6 +37,10 @@ class Session(object):
     def startTransfer(self):
         beginMessage = Message(beginMsg, self.id)
         beginMessage.fileName = utils.getBaseNameFromPath(self.fileName)
+        beginMessage.peerID = self.config.sessionID
+        beginMessage.peerName = self.config.name
+        beginMessage.peerAddress = self.config.address
+        beginMessage.peerPort = self.config.tcpPort
         log.msg("Sending BEGIN")
         log.msg("Message is {0}".format(beginMsg))
         f = SessionMessageFactory(self, beginMessage)

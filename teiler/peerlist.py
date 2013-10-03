@@ -37,3 +37,18 @@ class PeerList(QWidget):
                         return True
         return False
     
+    def getPeer(self, peerID, peerAddress, peerPort):
+        peers = (self.layout.itemAt(i).widget() for i in range(self.layout.count())) 
+        for p in peers:
+            log.msg("P: " + str(p))
+            if peerID == p.id:
+                if(peerAddress == p.address):
+                    if(int(peerPort) == p.port):
+                        return p
+        log.msg("Peer not found.")
+        return None
+    
+    def askPeer(self, fileName, peerID, peerName, peerAddress, peerPort):
+        peer = self.getPeer(peerID, peerAddress, peerPort)
+        peer.addAcceptTransferPrompt(fileName, peerName)
+        

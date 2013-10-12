@@ -1,5 +1,5 @@
-from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel, QProgressBar
-from PyQt4.QtCore import Qt, SIGNAL, QMargins
+from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton
+from PyQt4.QtCore import Qt, SIGNAL, QMargins, QPropertyAnimation, QSize
 
 # Class to represent a peer on the network and the gui
 class Peer(QWidget):
@@ -12,13 +12,14 @@ class Peer(QWidget):
         self.port = int(port)
         self.setAcceptDrops(True)
         self.setMinimumSize(320, 80)
-        self.setMaximumSize(320, 80)
-        # self.setContentsMargins(QMargins(0, 0, 0, 0))
+        #self.setMaximumSize(320, 80)
+        self.setContentsMargins(QMargins(0, 0, 0, 0))
         self.setAutoFillBackground(True)
         palette = self.palette()
         palette.setColor(self.backgroundRole(), Qt.white)
         self.setPalette(palette)
         self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
         nameLabel = QLabel(self.name)
         netLabel = QLabel(str(self.address) + ":" + str(self.port))
         self.layout.addWidget(nameLabel)
@@ -26,7 +27,7 @@ class Peer(QWidget):
         self.setLayout(self.layout)
         
     def __str__(self):
-        return self.id
+        return str(self.id)
 
     def __eq__(self, other):
         """needed to be able to remove items from peers form the list"""
@@ -36,12 +37,13 @@ class Peer(QWidget):
                     return True
         return False
     
-    def addAcceptTransferPrompt(self, fileName, peerName):
-        acceptText = QLabel(peerName + " wants to send you " + fileName + ".  Accept?")
-        progressBar = QProgressBar(self)
-        self.layout.addWidget(acceptText)
-        self.layout.addWidget(progressBar)
-    
+    def addPrompt(self, fileName, peerName):
+        prompt = Prompt(fileName, peerName)
+
+        self.connect(prompt, SIGNAL("accepted"), self.receiveAccept)
+        self.connect(prompt, SIGNAL("rejected"), self.receiveReject)
+        self.layout.addWidget(prompt)
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
             event.accept()
@@ -69,3 +71,53 @@ class Peer(QWidget):
             self.emit(SIGNAL("dropped"), fileName, self.id, self.address, self.port)
         else:
             event.ignore()
+
+    def receiveAccept(self, prompt):
+        print "Accepted"
+        prompt.deleteLater()
+
+    def receiveReject(self, prompt):
+        print "Rejected"
+        prompt.deleteLater()
+
+# Class to represent a peer on the network and the gui
+class Prompt(QWidget):
+    def __init__(self, fileName, peerName):
+        QWidget.__init__(self)
+        self.fileName = fileName
+        self.peerName = peerName
+        #self.setMinimumSize(0, 80)
+        self.resize(0,0)
+        self.setContentsMargins(QMargins(0, 0, 0, 0))
+
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(self.backgroundRole(), Qt.yellow)
+        self.setPalette(palette)
+        
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.acceptText = QLabel(peerName + " wants to send you " + fileName + ".  Accept?")
+        self.acceptButton = QPushButton("OK", self)
+        self.acceptButton.clicked.connect(self.clickAccept)
+
+        self.rejectButton = QPushButton("Reject", self)
+        self.rejectButton.clicked.connect(self.clickReject)
+        
+        self.layout.addWidget(self.acceptText)
+        self.layout.addWidget(self.acceptButton)
+        self.layout.addWidget(self.rejectButton)
+        self.setLayout(self.layout)
+
+        self.anim = QPropertyAnimation(self, "size")
+        self.anim.setDuration(250)
+        self.anim.setStartValue(QSize(320, 0))
+        self.anim.setEndValue(QSize(320, 80))
+        self.anim.start()
+        self.setMinimumSize(320, 80)
+
+    def clickAccept(self):
+        self.emit(SIGNAL("accepted"), self)
+
+    def clickReject(self):
+        self.emit(SIGNAL("rejected"), self)

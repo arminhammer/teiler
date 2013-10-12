@@ -1,5 +1,5 @@
 from PyQt4.QtCore import SIGNAL, QMargins, Qt
-from PyQt4.QtGui import QWidget, QVBoxLayout
+from PyQt4.QtGui import QWidget, QVBoxLayout, QScrollArea
 from ipeerlist import IPeerList
 from twisted.python import log
 import zope.interface
@@ -10,10 +10,21 @@ class PeerList(QWidget):
     
     def __init__(self, parent=None):
         super(PeerList, self).__init__(parent)
-        self.layout = QVBoxLayout(self)
-        self.setMinimumSize(320, 480)
+        #self.setMinimumSize(320, 480)
+        self.setGeometry(100, 100, 320, 480)
+        self.topLayout = QVBoxLayout(self)
+        self.topLayout.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.scrollBox = QScrollArea()
+        self.topLayout.addWidget(self.scrollBox)
+        
+        self.layoutWidget = QWidget(self)
+        self.layoutWidget.setMinimumSize(320, 480)
+        self.layout = QVBoxLayout(self.layoutWidget)
+        
         self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
         self.layout.setAlignment(Qt.AlignTop)
+        self.scrollBox.setWidget(self.layoutWidget)
+
         did = IPeerList.implementedBy(PeerList)
         log.msg("did is " + str(did))
         if not IPeerList.implementedBy(PeerList):
@@ -50,5 +61,5 @@ class PeerList(QWidget):
     
     def askPeer(self, fileName, peerID, peerName, peerAddress, peerPort):
         peer = self.getPeer(peerID, peerAddress, peerPort)
-        peer.addAcceptTransferPrompt(fileName, peerName)
+        peer.addPrompt(fileName, peerName)
         

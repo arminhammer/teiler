@@ -59,7 +59,7 @@ class PeerList(QWidget):
         log.msg("Peer not found.")
         return None
     
-    def askPeer(self, fileName, peerID, peerName, peerAddress, peerPort):
+    def askPeer(self, fileName, fileSize, peerID, peerName, peerAddress, peerPort):
         peer = self.getPeer(peerID, peerAddress, peerPort)
-        peer.addPrompt(fileName, peerName)
+        peer.addPrompt(fileName, fileSize, peerName)
         

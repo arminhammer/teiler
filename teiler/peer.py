@@ -37,7 +37,7 @@ class Peer(QWidget):
                     return True
         return False
     
-    def addPrompt(self, fileName, peerName):
+    def addPrompt(self, fileName, fileSize, peerName):
         prompt = Prompt(fileName, peerName)
 
         self.connect(prompt, SIGNAL("accepted"), self.receiveAccept)
@@ -75,13 +75,25 @@ class Peer(QWidget):
     def receiveAccept(self, prompt):
         print "Accepted"
         prompt.deleteLater()
-
+        
+        transferProgress = TransferProgress(prompt.fileName, prompt.peerName)
+        self.layout.addWidget(transferProgress)
+        
+        '''
+        self.layout.removeWidget(prompt)
+        prompt.close()
+        prompt = TransferProgress(prompt.fileName, prompt.peerName)
+        self.layout.addWidget(prompt)
+        self.layout.update()
+        '''
+        
     def receiveReject(self, prompt):
         print "Rejected"
         prompt.deleteLater()
 
 # Class to represent a peer on the network and the gui
 class Prompt(QWidget):
+    
     def __init__(self, fileName, peerName):
         QWidget.__init__(self)
         self.fileName = fileName
@@ -109,15 +121,48 @@ class Prompt(QWidget):
         self.layout.addWidget(self.rejectButton)
         self.setLayout(self.layout)
 
+        '''
         self.anim = QPropertyAnimation(self, "size")
         self.anim.setDuration(250)
         self.anim.setStartValue(QSize(320, 0))
         self.anim.setEndValue(QSize(320, 80))
         self.anim.start()
         self.setMinimumSize(320, 80)
-
+        '''
+        
     def clickAccept(self):
         self.emit(SIGNAL("accepted"), self)
 
     def clickReject(self):
         self.emit(SIGNAL("rejected"), self)
+
+# Class to represent the file transfer graphically
+class TransferProgress(QWidget):
+    
+    def __init__(self, fileName, peerName):
+        QWidget.__init__(self)
+        self.fileName = fileName
+        self.peerName = peerName
+        #self.setMinimumSize(0, 80)
+        self.resize(0,0)
+        self.setContentsMargins(QMargins(0, 0, 0, 0))
+        
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(self.backgroundRole(), Qt.cyan)
+        self.setPalette(palette)
+        
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.acceptText = QLabel(peerName + " transferring " + fileName + "...")
+        self.progressBar = QProgressBar()
+        #self.acceptButton = QPushButton("OK", self)
+        #self.acceptButton.clicked.connect(self.clickAccept)
+
+        #self.rejectButton = QPushButton("Reject", self)
+        #self.rejectButton.clicked.connect(self.clickReject)
+        
+        self.layout.addWidget(self.acceptText)
+        #self.layout.addWidget(self.acceptButton)
+        #self.layout.addWidget(self.rejectButton)
+        self.setLayout(self.layout)

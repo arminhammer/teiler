@@ -1,15 +1,18 @@
 from PyQt4.QtGui import QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton
 from PyQt4.QtCore import Qt, SIGNAL, QMargins, QPropertyAnimation, QSize
+from peerlist import PeerList
 
 # Class to represent a peer on the network and the gui
 class Peer(QWidget):
-    def __init__(self, id, name, address, port):
+    def __init__(self, id, name, address, port, peerList = None):
         # super(Peer, self).__init__(parent)
         QWidget.__init__(self)
         self.id = id
         self.address = address
         self.name = name
         self.port = int(port)
+        self.peerList = peerList
+        
         self.setAcceptDrops(True)
         self.setMinimumSize(320, 80)
         #self.setMaximumSize(320, 80)
@@ -37,8 +40,17 @@ class Peer(QWidget):
                     return True
         return False
     
+    '''
+    def connectToList(self, peerList):
+        self.peerList = peerList
+        self.connect(self.peerList, SIGNAL("updateProgressBar"), self.updateProgressBar)
+    '''
+        
+    def updateProgressBar(self, value, transferID):
+        self.emit(SIGNAL("updateTransferValue"), value, transferID)
+    
     def addPrompt(self, fileName, fileSize, peerName):
-        prompt = Prompt(fileName, peerName)
+        prompt = Prompt(fileName, int(fileSize), peerName, self)
 
         self.connect(prompt, SIGNAL("accepted"), self.receiveAccept)
         self.connect(prompt, SIGNAL("rejected"), self.receiveReject)
@@ -76,7 +88,7 @@ class Peer(QWidget):
         print "Accepted"
         prompt.deleteLater()
         
-        transferProgress = TransferProgress(prompt.fileName, prompt.peerName)
+        transferProgress = TransferProgress(prompt.fileName, prompt.fileSize, prompt.senderPeerName, self)
         self.layout.addWidget(transferProgress)
         
         '''
@@ -87,17 +99,23 @@ class Peer(QWidget):
         self.layout.update()
         '''
         
+        self.emit(SIGNAL("accepted"), prompt.peerName)
+        
     def receiveReject(self, prompt):
         print "Rejected"
         prompt.deleteLater()
+        self.emit(SIGNAL("rejected"), prompt.senderPeerName)
 
 # Class to represent a peer on the network and the gui
 class Prompt(QWidget):
     
-    def __init__(self, fileName, peerName):
+    def __init__(self, fileName, fileSize, senderPeerName, peer):
         QWidget.__init__(self)
         self.fileName = fileName
-        self.peerName = peerName
+        self.senderPeerName = senderPeerName
+        self.fileSize = fileSize
+        self.peer = peer
+        
         #self.setMinimumSize(0, 80)
         self.resize(0,0)
         self.setContentsMargins(QMargins(0, 0, 0, 0))
@@ -109,7 +127,7 @@ class Prompt(QWidget):
         
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
-        self.acceptText = QLabel(peerName + " wants to send you " + fileName + ".  Accept?")
+        self.acceptText = QLabel(self.senderPeerName + " wants to send you " + self.fileName + " (Size: " + str(self.fileSize) + ").  Accept?")
         self.acceptButton = QPushButton("OK", self)
         self.acceptButton.clicked.connect(self.clickAccept)
 
@@ -139,10 +157,12 @@ class Prompt(QWidget):
 # Class to represent the file transfer graphically
 class TransferProgress(QWidget):
     
-    def __init__(self, fileName, peerName):
+    def __init__(self, fileName, fileSize, senderPeerName, peer):
         QWidget.__init__(self)
         self.fileName = fileName
-        self.peerName = peerName
+        self.senderPeerName = senderPeerName
+        self.connect(peer, SIGNAL("updateProgress", self.updateProgressBar))
+        
         #self.setMinimumSize(0, 80)
         self.resize(0,0)
         self.setContentsMargins(QMargins(0, 0, 0, 0))
@@ -154,15 +174,16 @@ class TransferProgress(QWidget):
         
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
-        self.acceptText = QLabel(peerName + " transferring " + fileName + "...")
+        self.acceptText = QLabel(self.senderPeerName + " transferring " + self.fileName + "...")
         self.progressBar = QProgressBar()
-        #self.acceptButton = QPushButton("OK", self)
-        #self.acceptButton.clicked.connect(self.clickAccept)
-
-        #self.rejectButton = QPushButton("Reject", self)
-        #self.rejectButton.clicked.connect(self.clickReject)
+        self.progressBar.setMinimum(1)
+        self.progressBar.setMaximum(fileSize)
         
         self.layout.addWidget(self.acceptText)
-        #self.layout.addWidget(self.acceptButton)
-        #self.layout.addWidget(self.rejectButton)
+        self.layout.addWidget(self.progressBar)
+
         self.setLayout(self.layout)
+        
+    def updateProgressBar(self, senderID, value):
+        if self.senderPeerName == senderID:
+            self.progressBar.setValue(int(value))

@@ -1,6 +1,6 @@
 from PyQt4.QtGui import QApplication
 from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QPushButton
+from PyQt4.QtGui import QPushButton, QWidget
 from peer import Peer
 from peerlist import PeerList
 import sys, time
@@ -10,6 +10,24 @@ app = QApplication(sys.argv)
 peer1 = Peer(101, "TestPeer1", "127.0.0.1", 8888)
 peer2 = Peer(102, "TestPeer2", "127.0.0.1", 9999)
 
+class TestWindow(QWidget):
+    
+    def __init__(self, list, parent=None):
+        super(TestWindow, self).__init__(parent)
+        self.list = list
+        self.connect(list, SIGNAL("accepted"), self.initSend)
+        self.connect(list, SIGNAL("rejected"), self.printMessage)
+        self.connect(list, SIGNAL("initTransfer"), self.printMessage)
+        
+    def printMessage(self, message):
+        print "SIGNAL received: " + message
+        
+    def initSend(self, peerID):
+        for i in range(0, 512):
+            self.emit(SIGNAL("updateProgress"), peerID, i)
+            print "Container is emitting " + i + " for " + peerID
+            time.sleep(1)
+        
 class TestPeerList(PeerList):
     
     def __init__(self, parent=None):
@@ -29,10 +47,17 @@ class TestPeerList(PeerList):
         print "test"
 
 def main():    
-
+    
     list = TestPeerList()
+    
+    container = TestWindow(list)
+
     list.add(peer1)
     list.add(peer2)
+    
+    #peer1.connectToList(list)
+    #peer2.connectToList(list)
+    
     list.show()
 
     #list.askPeer("File1", peer.id, peer.name, peer.address, peer.port)

@@ -8,8 +8,11 @@ import zope.interface
 class PeerList(QWidget):
     zope.interface.implements(IPeerList)
     
-    def __init__(self, parent=None):
+    def __init__(self, container=None, parent=None):
         super(PeerList, self).__init__(parent)
+        
+        self.container = container
+        
         #self.setMinimumSize(320, 480)
         self.setGeometry(100, 100, 320, 480)
         self.topLayout = QVBoxLayout(self)
@@ -33,11 +36,20 @@ class PeerList(QWidget):
     def add(self, peer):
         self.layout.addWidget(peer)
         self.connect(peer, SIGNAL("dropped"), self.notifyTeiler)
+        self.connect(peer, SIGNAL("accepted"), self.acceptance)
+        self.connect(peer, SIGNAL("rejected"), self.rejection)
+        
         log.msg("Peerlist: added peer " + str(peer))
         log.msg("Count is: " + str(self.layout.count()))
     
     def notifyTeiler(self, fileName, peerID, peerAddress, peerPort):
         self.emit(SIGNAL("initTransfer"), fileName, peerID, peerAddress, peerPort)
+    
+    def acceptance(self, peerID):
+        self.emit(SIGNAL("accepted"), peerID)
+        
+    def rejection(self, peerID):
+        self.emit(SIGNAL("rejected"), peerID)
         
     def contains(self, peerID, peerAddress, peerPort):
         peers = (self.layout.itemAt(i).widget() for i in range(self.layout.count())) 

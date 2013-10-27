@@ -85,7 +85,7 @@ class Peer(QWidget):
             event.ignore()
 
     def receiveAccept(self, prompt):
-        print "Accepted"
+        print "Peer received Accepted"
         prompt.deleteLater()
         
         transferProgress = TransferProgress(prompt.fileName, prompt.fileSize, prompt.senderPeerName, self)
@@ -99,10 +99,10 @@ class Peer(QWidget):
         self.layout.update()
         '''
         
-        self.emit(SIGNAL("accepted"), prompt.peerName)
+        self.emit(SIGNAL("accepted"), prompt.senderPeerName)
         
     def receiveReject(self, prompt):
-        print "Rejected"
+        print "Peer received Rejected"
         prompt.deleteLater()
         self.emit(SIGNAL("rejected"), prompt.senderPeerName)
 
@@ -161,7 +161,7 @@ class TransferProgress(QWidget):
         QWidget.__init__(self)
         self.fileName = fileName
         self.senderPeerName = senderPeerName
-        self.connect(peer, SIGNAL("updateProgress", self.updateProgressBar))
+        self.connect(peer.peerList.container, SIGNAL("updateProgress"), self.updateProgressBar)
         
         #self.setMinimumSize(0, 80)
         self.resize(0,0)
@@ -175,9 +175,10 @@ class TransferProgress(QWidget):
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(QMargins(0, 0, 0, 0))
         self.acceptText = QLabel(self.senderPeerName + " transferring " + self.fileName + "...")
-        self.progressBar = QProgressBar()
-        self.progressBar.setMinimum(1)
-        self.progressBar.setMaximum(fileSize)
+        self.progressBar = QProgressBar(self)
+        #self.progressBar.setMinimum(0)
+        #self.progressBar.setMaximum(fileSize)
+        self.progressBar.setValue(50)
         
         self.layout.addWidget(self.acceptText)
         self.layout.addWidget(self.progressBar)
@@ -185,5 +186,7 @@ class TransferProgress(QWidget):
         self.setLayout(self.layout)
         
     def updateProgressBar(self, senderID, value):
+        print "Caught emit for " + senderID + " for value " + str(value) + ", I am expecting " + self.senderPeerName
         if self.senderPeerName == senderID:
-            self.progressBar.setValue(int(value))
+            print "Should update..."
+            self.progressBar.setValue(value)

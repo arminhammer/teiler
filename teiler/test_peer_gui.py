@@ -4,6 +4,7 @@ from PyQt4.QtGui import QPushButton, QWidget
 from peer import Peer
 from peerlist import PeerList
 import sys, time
+from threading import Thread
 
 app = QApplication(sys.argv)
 
@@ -22,11 +23,18 @@ class TestWindow(QWidget):
     def printMessage(self, message):
         print "SIGNAL received: " + message
         
-    def initSend(self, peerID):
-        for i in range(0, 512):
+        
+    def emitUpdate(self, peerID, max):
+        for i in range(1, int(max)):
             self.emit(SIGNAL("updateProgress"), peerID, i)
-            print "Container is emitting " + i + " for " + peerID
-            time.sleep(1)
+            print "Container is emitting " + str(i) + " for " + peerID
+            time.sleep(0.5)
+            
+    def initSend(self, peerID):
+        thread = Thread(target = self.emitUpdate, args = (peerID, 100))
+        thread.start()
+        #thread.join()
+        print "Thread launched"
         
 class TestPeerList(PeerList):
     
@@ -52,11 +60,12 @@ def main():
     
     container = TestWindow(list)
 
+    list.container = container
     list.add(peer1)
     list.add(peer2)
     
-    #peer1.connectToList(list)
-    #peer2.connectToList(list)
+    peer1.peerList = list
+    peer2.peerList = list
     
     list.show()
 
